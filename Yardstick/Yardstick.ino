@@ -16,7 +16,7 @@
 // | |___| |  | |  __/ ___)  |  | |
 //  \____|_|  |_|_|   |____/ |_ |_|
                                
-#include <CompassCMPS11_t3.h>
+#include <CompassCMPS11_Teensy.h>
 
 //     _       _        __            _ _      ____ ____  ____  
 //    / \   __| | __ _ / _|_ __ _   _(_) |_   / ___|  _ \/ ___| .
@@ -81,7 +81,7 @@ Servo servoMotors;
 int rudder = 90;
 
 // Declare the compass class
-CompassCMPS11_t3 compass1;
+CompassCMPS11_Teensy compass1;
 
 //A GPS library
 AdaGPS gps;

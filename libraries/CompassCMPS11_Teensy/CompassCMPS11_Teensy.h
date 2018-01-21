@@ -1,5 +1,5 @@
-#ifndef CompassCMPS11_t3_h
-  #define CompassCMPS11_t3_h
+#ifndef CompassCMPS11_Teensy_h
+  #define CompassCMPS11_Teensy_h
 
   #include "i2c_t3.h"  // I2C library
 
@@ -32,7 +32,7 @@
   #define _ONE_BYTE 1
   #define _TWO_BYTES 2
 
-  class CompassCMPS11_t3{
+  class CompassCMPS11_Teensy{
 	public:
 		
 		void begin(uint8_t _addr, uint8_t _setbus);

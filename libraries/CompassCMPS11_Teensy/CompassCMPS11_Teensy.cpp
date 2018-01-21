@@ -1,7 +1,7 @@
 
 #include "i2c_t3.h"  // I2C library
 
-#include "CompassCMPS11_t3.h"
+#include "CompassCMPS11_Teensy.h"
 
 // Register Function
 // 0        Command register (write) / Software version (read)
@@ -29,7 +29,7 @@
 // 26       Pitch angle - signed byte giving angle in degrees from the horizontal plane (no Kalman filter)
 // 27       Roll angle - signed byte giving angle in degrees from the horizontal plance (no Kalman filter)
 
-void CompassCMPS11_t3::begin(uint8_t _addr = 0x60, uint8_t _setbus = 0) {
+void CompassCMPS11_Teensy::begin(uint8_t _addr = 0x60, uint8_t _setbus = 0) {
 
   i2c_addr = _addr;
   _bus = _setbus;
@@ -58,7 +58,7 @@ void CompassCMPS11_t3::begin(uint8_t _addr = 0x60, uint8_t _setbus = 0) {
 
 }
 
-int16_t CompassCMPS11_t3::getBearing()
+int16_t CompassCMPS11_Teensy::getBearing()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -98,7 +98,7 @@ int16_t CompassCMPS11_t3::getBearing()
   return _bearing;
 }
 
-byte CompassCMPS11_t3::getPitch()
+byte CompassCMPS11_Teensy::getPitch()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -131,7 +131,7 @@ byte CompassCMPS11_t3::getPitch()
   return _pitch;
 }
 
-byte CompassCMPS11_t3::getRoll()
+byte CompassCMPS11_Teensy::getRoll()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -164,7 +164,7 @@ byte CompassCMPS11_t3::getRoll()
   return _roll ;
 }
 
-int16_t CompassCMPS11_t3::getGyroX()
+int16_t CompassCMPS11_Teensy::getGyroX()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -199,7 +199,7 @@ int16_t CompassCMPS11_t3::getGyroX()
   return ((_byteHigh<<8) + _byteLow);
 }
 
-int16_t CompassCMPS11_t3::getGyroY()
+int16_t CompassCMPS11_Teensy::getGyroY()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -234,7 +234,7 @@ int16_t CompassCMPS11_t3::getGyroY()
   return ((_byteHigh<<8) + _byteLow);
 }
 
-int16_t CompassCMPS11_t3::getGyroZ()
+int16_t CompassCMPS11_Teensy::getGyroZ()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -269,7 +269,7 @@ int16_t CompassCMPS11_t3::getGyroZ()
   return ((_byteHigh<<8) + _byteLow);
 }
 
-int16_t CompassCMPS11_t3::getAcceleroX()
+int16_t CompassCMPS11_Teensy::getAcceleroX()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -304,7 +304,7 @@ int16_t CompassCMPS11_t3::getAcceleroX()
   return (((int16_t)_byteHigh <<8) + (int16_t)_byteLow);
 }
 
-int16_t CompassCMPS11_t3::getAcceleroY()
+int16_t CompassCMPS11_Teensy::getAcceleroY()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -339,7 +339,7 @@ int16_t CompassCMPS11_t3::getAcceleroY()
   return (((int16_t)_byteHigh <<8) + (int16_t)_byteLow);
 }
 
-int16_t CompassCMPS11_t3::getAcceleroZ()
+int16_t CompassCMPS11_Teensy::getAcceleroZ()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -375,7 +375,7 @@ int16_t CompassCMPS11_t3::getAcceleroZ()
 
 }
 
-int16_t CompassCMPS11_t3::getMagnetX()
+int16_t CompassCMPS11_Teensy::getMagnetX()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -410,7 +410,7 @@ int16_t CompassCMPS11_t3::getMagnetX()
   return (((int16_t)_byteHigh <<8) + (int16_t)_byteLow);
 }
 
-int16_t CompassCMPS11_t3::getMagnetY()
+int16_t CompassCMPS11_Teensy::getMagnetY()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -445,7 +445,7 @@ int16_t CompassCMPS11_t3::getMagnetY()
   return (((int16_t)_byteHigh <<8) + (int16_t)_byteLow);
 }
 
-int16_t CompassCMPS11_t3::getMagnetZ()
+int16_t CompassCMPS11_Teensy::getMagnetZ()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -480,7 +480,7 @@ int16_t CompassCMPS11_t3::getMagnetZ()
   return (((int16_t)_byteHigh <<8) + (int16_t)_byteLow);
 }
 
-float CompassCMPS11_t3::getTemperature()
+float CompassCMPS11_Teensy::getTemperature()
 {
   //Setup timeout parameter
   int timeout = COMMUNICATION_TIMEOUT;
@@ -515,7 +515,7 @@ float CompassCMPS11_t3::getTemperature()
   return (((int16_t)_byteHigh <<8) + (int16_t)_byteLow);
 }
 
-void CompassCMPS11_t3::changeAddress(byte i2cAddress, byte newi2cAddress)
+void CompassCMPS11_Teensy::changeAddress(byte i2cAddress, byte newi2cAddress)
 {
   // Reset the address on the i2c network
   // Ensure that you have only this module connected on the i2c network
