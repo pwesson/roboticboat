@@ -57,8 +57,6 @@
 //float listlatitude[] = {51.289822222, 51.289983333, 51.287491375, 51.287427800};
 //float listlongitude[] = {0.160686111, 0.160505555, 0.149560475, 0.154475000};
 
-//Adafruit_AlphaNum_Teensy Alpha;
-
 //Is Robot in control of the human
 bool IsHuman = true;
 
@@ -79,7 +77,7 @@ unsigned long lasttime;
 
 //Radio Control Servo
 Servo servoRudder;
-Servo servoSails;
+Servo servoMotors;
 int rudder = 90;
 
 // Declare the compass class
@@ -136,7 +134,7 @@ void setup()
 
   //Setup servo connection for rudder and sail
   servoRudder.attach(20);
-  servoSails.attach(21);
+  servoMotors.attach(21);
 
   //Set the rudder range
   myrudder.maxposition = 90 + 40;
@@ -158,9 +156,11 @@ void setup()
   Serial1.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
   delay(100);
 
-  // 1MHz update
   // Send setup command to the GPS module
-  Serial1.println("$PMTK220,1000*1F");
+  Serial1.println("$PMTK220,1000*1F"); // Once per second (1Hz)
+  //Serial1.println("$PMTK220,200*2C");  //  5 times a second
+  //Serial1.println("$PMTK220,100*2F");  // 10 times a second (10Hz)
+  //At faster speeds need to set Serial1 at faster frequency
   delay(100);
 
   // Initialize the compass and initial readings
@@ -210,7 +210,7 @@ void serialEvent2()
       // Open the wifi disk file
       File wifiFile = SD.open("wifilog.txt", FILE_WRITE);
 
-      Serial.print("y14,$TMR,");
+      Serial.print("y17,$TMR,");
       Serial.print(mytime);
       Serial.print(",$WIFI,");
       Serial.println(wifibuffer);
@@ -218,7 +218,7 @@ void serialEvent2()
       // Can we write to the file
       if (wifiFile)
       {
-        wifiFile.print("y14,$TMR,");
+        wifiFile.print("y17,$TMR,");
         wifiFile.print(mytime);
         wifiFile.print(",$WIFI,");
         wifiFile.println(wifibuffer);       
@@ -394,8 +394,8 @@ void loop()
     rudder = ch1;
     servoRudder.write(rudder);
 
-    // Human sets the sails position
-    servoSails.write(ch2);
+    // Human sets the motor speed
+    servoMotors.write(ch2);
 
     //Have sometime for the servo to move
     delay(100);
@@ -409,12 +409,12 @@ void loop()
     servoRudder.write(rudder);
 
     // Human still controls the sails
-    servoSails.write(ch2);
+    servoMotors.write(ch2);
   }
 
 
   // Print data to Serial Monitor window
-  Serial.print("y16,$TMR,");
+  Serial.print("y17,$TMR,");
   Serial.print(mytime);
   Serial.print(",$RC,");
   Serial.print(ch1);
@@ -491,7 +491,7 @@ void loop()
 
   if (dataFile)
   {
-    dataFile.print("y16,$TMR,");
+    dataFile.print("y17,$TMR,");
     dataFile.print(mytime);
     dataFile.print(",$RC,");
     dataFile.print(ch1);
