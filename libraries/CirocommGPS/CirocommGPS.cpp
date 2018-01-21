@@ -69,7 +69,7 @@ bool CirocommGPS::CheckSum(char* msg) {
 
   // Check the checksum
   //$GPGGA,.........................0000*6A
-
+  
   // Length of the GPS message
   int len = strlen(msg);
 
