@@ -35,32 +35,11 @@
 #include <Adafruit_AlphaNum_Teensy.h>
                    
 
-//
-// The GPS is set on serialEvent1 to pick up the GPS messages
-// Square
-// A: 51.28750000,  0.153888889
-// B: 51.28839932,  0.153888889
-// C: 51.28839932,  0.152450896
-// D: 51.28750000,  0.152450896
-// A: 51.28750000,  0.153888889
-// float listlatitude[] = {51.28750000, 51.28839932, 51.28839932, 51.28750000, 51.28750000};
-// float listlongitude[] = {0.153888889, 0.153888889, 0.152450896, 0.152450896, 0.153888889};
-//
-
-// 800m line
-// A: 51.289822222,0.160686111
-// B: 51.289983333,0.160505555
-// C: 51.287491375,0.149560475
-// D: 51.287427800,0.154475000
-//
-//int nlist = 0;
-//float listlatitude[] = {51.289822222, 51.289983333, 51.287491375, 51.287427800};
-//float listlongitude[] = {0.160686111, 0.160505555, 0.149560475, 0.154475000};
-
 //Is Robot in control of the human
 bool IsHuman = true;
 
 volatile int wifiptr = 0;
+volatile int wifilen = 0;
 char wifibuffer[105];
 
 //Radio Control Receiver
@@ -143,6 +122,10 @@ void setup()
   // LED display setup
   Alpha.begin(0x70, 1);  // pass in the address
   Alpha.clear();
+
+  // The single zero shows the LED works.
+  // It will got blank once depth signal is pickedup
+  Alpha.writeDigitAscii(3, 0, false);
   Alpha.writeDisplay();
   Alpha.setBrightness(1);
   
@@ -182,13 +165,16 @@ void setup()
   //Set the last time
   lasttime = 0;
 
-  // Set the Yardstick regression parameters
+  // Set the Yardstick regression parameters. 
+  // These numbers were found by trial and error
+  // The rudders on Yardstick are very sensitive
   myrudder.SetGyroRegressionStatic(0.70, -65);
 }
 
 void serialEvent1()
 {
   //This event is called when Serial1 receives new bytes
+  //It needs to be an event else GPS characters will be missed
   while (Serial1.available())
   {
     // Read the new byte:
@@ -198,7 +184,15 @@ void serialEvent1()
 
 void serialEvent2()
 {
-  //This event is called when Serial2 receives new bytes
+  // This event is called when Serial2 receives new bytes
+  //
+  // Yardstick sets up a local WiFi called "Yardstick Robotic Boat" using ESP8266
+  // Remember it takes some minutes for the ESP8266 to set itself up before website works
+  // The boat IP address on that WiFi is  http://192.168.4.1/
+  // A Windows tablet onboard connected to NMEA2000 measures the depth.
+  // Every second tablet then requests the web page http://192.168.4.1/Depth=00.00
+  // The Teensy (via WiFi) reads the requested webpage. So can figure out the depth
+  // 
   while (Serial2.available())
   {
     // Read the new byte:
@@ -210,15 +204,52 @@ void serialEvent2()
       // Open the wifi disk file
       File wifiFile = SD.open("wifilog.txt", FILE_WRITE);
 
-      Serial.print("y17,$TMR,");
+      Serial.print("yard18,$TMR,");
       Serial.print(mytime);
       Serial.print(",$WIFI,");
       Serial.println(wifibuffer);
+
+      // Do we have the string we are looking for?
+      // Check the first 6 characters
+      if (strncmp("Depth=", wifibuffer, 6) == 0)
+      {
+        // We match the first characters. Now check the rest of the format Depth=00.00
+        // strlen gets the length of a null-terminated string. Check for the .
+        // Can show reading up to 100m, approx max depth of DST 800 transducer
+        if (strlen(wifibuffer) == 12 && wifibuffer[8] == '.'){
+          
+            // So we want to show the following characters
+            // Depth= wifibuffer[6] wifibuffer[7] . wifibuffer[9] wifibuffer[10]
+            // Character '0'=48, '1'=49, '2'=50, ...       '9'=57
+            
+            // Need to check for data quality
+            if (wifibuffer[6] >= 48 && wifibuffer[6] <=57){
+              Alpha.writeDigitAscii(0, wifibuffer[6]-48, false); // false = no decimal point  
+            }
+            if (wifibuffer[7] >= 48 && wifibuffer[7] <=57){
+              Alpha.writeDigitAscii(1, wifibuffer[7]-48, true); // false = no decimal point
+            }
+            if (wifibuffer[9] >= 48 && wifibuffer[9] <=57){
+              Alpha.writeDigitAscii(2, wifibuffer[9]-48, false); // true = decimal point
+            }
+            if (wifibuffer[10] >= 48 && wifibuffer[10] <=57){
+              Alpha.writeDigitAscii(3, wifibuffer[10]-48, false); // false = no decimal point
+            }
+                       
+            Alpha.writeDisplay();
+        }
+        else
+        {
+          // We have lost the depth reading. So turn off the display
+          Alpha.clear();
+          Alpha.writeDisplay();
+        }
+      }
         
       // Can we write to the file
       if (wifiFile)
       {
-        wifiFile.print("y17,$TMR,");
+        wifiFile.print("yard18,$TMR,");
         wifiFile.print(mytime);
         wifiFile.print(",$WIFI,");
         wifiFile.println(wifibuffer);       
@@ -232,6 +263,7 @@ void serialEvent2()
     {
       // Message still being built
       wifibuffer[wifiptr] = nextChar;
+      // Ensure a null-terminated string
       wifibuffer[wifiptr + 1] = '\0';
 
       // Move on to the next character
@@ -320,21 +352,8 @@ void loop()
 
       //The Robot wants to know the line AB to follow.
       myrudder.NewLine(gps.latitude, gps.longitude, BoatHeading);
-      
-      //The Robot wants to know the line AB to follow.
-      //nlist = 0;
-      //myrudder.NewLine(gps.latitude, gps.longitude, listlatitude[0], listlongitude[0]);
     }
 
-    // Have we reached the next waypoint F?
-    //if (myrudder.alongtrack >= myrudder.alongtrackobjective)
-    //{
-    //  Move to the next waypoint 
-    //  nlist = nlist+1;
-    //  if (nlist >4) nlist = 4;
-    //  myrudder.NewLine(gps.latitude, gps.longitude, listlatitude[nlist], listlongitude[nlist]);
-    //}
-    
     //The Human has handed control of the boat to the Robot
     IsHuman = false;
   }
@@ -348,19 +367,6 @@ void loop()
 
   // Read the compass.
   BoatHeading = compass1.getBearing();
-
-  int i = BoatHeading;
-  int k = 0;
-  /* Find the last digit from num and add to sum */
-  Alpha.writeDigitAscii(3, (i % 10), false); // false = no decimal point
-  k = i/10;
-  Alpha.writeDigitAscii(2, (k % 10), false); // false = no decimal point
-  k = k/10;
-  Alpha.writeDigitAscii(1, (k % 10), false); // false = no decimal point
-  k = k/10;
-  Alpha.writeDigitAscii(0, (k % 10), false); // false = no decimal point
-
-  Alpha.writeDisplay();
 
   //Note sometimes the compass may return 0 if it can't read.
   //In this case, keep the old bearing
@@ -383,9 +389,6 @@ void loop()
   myrudder.GyroUpdateMean(BoatHeading, gyroz);
 
   myrudder.AddGyroReading(rudder, gyroz);
-
-  //Want to update the Wind direction estimate
-  //mywind.Update(BoatHeading, roll);
 
   // The Human has to control the boat if there is no GPS signal
   if (IsHuman || gps.gpsstatus == 'V')
@@ -414,7 +417,7 @@ void loop()
 
 
   // Print data to Serial Monitor window
-  Serial.print("y17,$TMR,");
+  Serial.print("yard18,$TMR,");
   Serial.print(mytime);
   Serial.print(",$RC,");
   Serial.print(ch1);
@@ -491,7 +494,7 @@ void loop()
 
   if (dataFile)
   {
-    dataFile.print("y17,$TMR,");
+    dataFile.print("yard18,$TMR,");
     dataFile.print(mytime);
     dataFile.print(",$RC,");
     dataFile.print(ch1);
