@@ -64,7 +64,7 @@ CompassCMPS11 compass1;
 AdaGPS gps;
 
 //
-// The Adafruit GPS flashes once every 15 seconds when it has found a fix
+// The Adafruit GPS flashes oncee every 15 seconds when it has found a fix
 //
 
 // Global variables
@@ -75,6 +75,7 @@ boolean IsReadySerial1 = false;  // whether the string is complete
 float BoatHeading = 0;
 float oldBoatHeading = 0;
 float bearingchanged = 0;
+float toWind = 0;
 
 signed char pitch = 0;
 signed char roll = 0;
@@ -245,7 +246,20 @@ void loop()
 
       //The Robot wants to know the line AB to follow.
       myrudder.NewLine(gps.latitude, gps.longitude, BoatHeading);
+      
+      //The Robot wants to know the line AB to follow.
+      //nlist = 0;
+      //myrudder.NewLine(gps.latitude, gps.longitude, listlatitude[0], listlongitude[0]);
     }
+
+    // Have we reached the next waypoint F?
+    //if (myrudder.alongtrack >= myrudder.alongtrackobjective)
+    //{
+    //  Move to the next waypoint 
+    //  nlist = nlist+1;
+    //  if (nlist >4) nlist = 4;
+    //  myrudder.NewLine(gps.latitude, gps.longitude, listlatitude[nlist], listlongitude[nlist]);
+    //}
     
     //The Human has handed control of the boat to the Robot
     IsHuman = false;
@@ -261,7 +275,15 @@ void loop()
   // Read the compass.
   BoatHeading = compass1.getBearing();
 
-  if (BoatHeading <=10 || BoatHeading >=350){
+  // Degrees to the Wind
+  toWind = BoatHeading - mywind.Direction;
+
+  // Ensure angle in degree is between -180 to 180 degrees.
+  if (toWind > 180) toWind -= 360;
+  if (toWind < -180) toWind += 360;
+
+  // Is the boat heading within 45 degrees of the Wind direction?
+  if (abs(toWind) <=45){
     digitalWrite(37, HIGH);   // set the Red LED on
   }
   else
@@ -319,9 +341,8 @@ void loop()
     servoSails.write(ch2);
   }
 
-
   // Print data to Serial Monitor window
-  Serial.print("mm3,$TMR,");
+  Serial.print("mm2,$TMR,");
   Serial.print(mytime);
   Serial.print(",$RC,");
   Serial.print(ch1);
@@ -400,7 +421,7 @@ void loop()
 
   if (dataFile)
   {
-    dataFile.print("mm3,$TMR,");
+    dataFile.print("mm2,$TMR,");
     dataFile.print(mytime);
     dataFile.print(",$RC,");
     dataFile.print(ch1);
