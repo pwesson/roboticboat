@@ -1,5 +1,4 @@
 #include <SD.h>
-#include <Wire.h>
 #include <Servo.h>
 #include <math.h>
 
@@ -17,7 +16,7 @@
 // | |___  | |  | | |  __/   ___) |   | |  | |
 //  \____| |_|  |_| |_|     |____/    |_|  |_|
 
-#include <CompassCMPS11.h>
+#include <CompassCMPS11_Teensy.h>
 
 //     _          _            __                  _   _        ____   ____    ____
 //    / \      __| |   __ _   / _|  _ __   _   _  (_) | |_     / ___| |  _ \  / ___|
@@ -40,6 +39,8 @@
 //Is Robot in control of the human
 bool IsHuman = true;
 
+int i=0;
+
 //Radio Control Receiver
 int ch1 = 0;
 int ch2 = 0;
@@ -48,9 +49,13 @@ int ch3 = 0;
 //LED light
 bool islighton = false;
 
+// Rudder is centered
+bool iscentered = true;
+
 // Timer
 unsigned long mytime;
 unsigned long lasttime;
+unsigned long lastadjust;
 
 //Radio Control Servo
 Servo servoRudder;
@@ -58,13 +63,13 @@ Servo servoSails;
 int rudder = 90;
 
 // Declare the compass class
-CompassCMPS11 compass1;
+CompassCMPS11_Teensy compass1;
 
 //A GPS library
 AdaGPS gps;
 
 //
-// The Adafruit GPS flashes oncee every 15 seconds when it has found a fix
+// The Adafruit GPS flashes once every 15 seconds when it has found a fix
 //
 
 // Global variables
@@ -137,20 +142,17 @@ void setup()
   delay(100);
 
   // Initialize the compass and initial readings
-  compass1.begin();
+  compass1.begin(0x60, 0);
 
-  BoatHeading = compass1.getBearing();
+  BoatHeading = 0; //compass1.getBearing();
   oldBoatHeading = BoatHeading;
 
   // Initialise the SD card
-  if (!SD.begin(BUILTIN_SDCARD))
-  {
-    Serial.println("SD failed");
-    return;
-  }
+  InitialiseSDcard(10);
 
   //Set the last time
   lasttime = 0;
+  lastadjust = 0;
 }
 
 void serialEvent1()
@@ -245,22 +247,9 @@ void loop()
       //The Human was in control, so now initialise the Robot task
 
       //The Robot wants to know the line AB to follow.
-      myrudder.NewLine(gps.latitude, gps.longitude, BoatHeading);
-      
-      //The Robot wants to know the line AB to follow.
-      //nlist = 0;
-      //myrudder.NewLine(gps.latitude, gps.longitude, listlatitude[0], listlongitude[0]);
+      myrudder.NewLine(gps.latitude, gps.longitude, BoatHeading);      
     }
 
-    // Have we reached the next waypoint F?
-    //if (myrudder.alongtrack >= myrudder.alongtrackobjective)
-    //{
-    //  Move to the next waypoint 
-    //  nlist = nlist+1;
-    //  if (nlist >4) nlist = 4;
-    //  myrudder.NewLine(gps.latitude, gps.longitude, listlatitude[nlist], listlongitude[nlist]);
-    //}
-    
     //The Human has handed control of the boat to the Robot
     IsHuman = false;
   }
@@ -294,11 +283,11 @@ void loop()
   //Note sometimes the compass may return 0 if it can't read.
   //In this case, keep the old bearing
   if (BoatHeading == 0) BoatHeading = oldBoatHeading;
-
+  
   // Read the pitch and roll of the boat
   pitch = compass1.getPitch();
   roll = compass1.getRoll();
-
+  
   // Read the compass gyro
   gyrox = compass1.getGyroX() * compass1._gyroScale;
   gyroy = compass1.getGyroY() * compass1._gyroScale;
@@ -333,7 +322,7 @@ void loop()
   {
     // Update the new rudder position
     rudder = myrudder.Update(gps.latitude, gps.longitude, BoatHeading);
-
+    
     // Robot updates the rudder position
     servoRudder.write(rudder);
 
@@ -342,7 +331,7 @@ void loop()
   }
 
   // Print data to Serial Monitor window
-  Serial.print("mm2,$TMR,");
+  Serial.print("micro4,$TMR,");
   Serial.print(mytime);
   Serial.print(",$RC,");
   Serial.print(ch1);
@@ -421,7 +410,7 @@ void loop()
 
   if (dataFile)
   {
-    dataFile.print("mm2,$TMR,");
+    dataFile.print("micro4,$TMR,");
     dataFile.print(mytime);
     dataFile.print(",$RC,");
     dataFile.print(ch1);
@@ -509,7 +498,148 @@ void loop()
     dataFile.println(myrudder.sensitivity);
 
     dataFile.close();
+    delay(100);
   }
 }
+
+void InitialiseSDcard(int testseconds)
+{
+  Serial.print("Initializing SD card...");
+
+  if (!SD.begin(BUILTIN_SDCARD)) {
+    Serial.println("SD failed");
+    for (i=1;i<=testseconds;i++)
+    {
+      digitalWrite(13, HIGH);
+      delay(100);
+      digitalWrite(13, LOW);
+      delay(900);
+    }
+    return;
+  }
+  Serial.println("done.");
+
+  if (ReadWriteTest()){
+    Serial.println("OK");
+    digitalWrite(13, HIGH);
+    delay(testseconds * 1000);
+    digitalWrite(13, LOW);
+  }
+  else
+  {
+    Serial.println("ERROR");
+    for (i=1;i<=testseconds;i++)
+    {
+      digitalWrite(13, HIGH);
+      delay(500);
+      digitalWrite(13, LOW);
+      delay(500);
+    }
+  }  
+}
+
+void InfoTest()
+{
+  Sd2Card SDcard;
+  SdVolume volume;
+  SdFile root;
+
+  // Card information
+  Serial.print("\nCard info: ");
+  switch(SDcard.type()) {
+    case SD_CARD_TYPE_SD1:
+      Serial.print("SD1"); break;
+    case SD_CARD_TYPE_SD2:
+      Serial.print("SD2"); break;
+    case SD_CARD_TYPE_SDHC:
+      Serial.print("SDHC"); break;
+    default:
+      Serial.print("Unknown");
+  }
+
+  // Find the volume on the SD card
+  if (!volume.init(SDcard)) {
+    Serial.println("\nNo FAT16/FAT32 partition.");
+    return;
+  }
+
+  // FAT type
+  uint32_t volumesize;
+  Serial.print(", FAT"); Serial.print(volume.fatType(), DEC);
+  Serial.print(", ");
+  
+  // Sector size (or Blocks) is fixed at 512 bytes
+  volumesize = volume.blocksPerCluster() * volume.clusterCount() * 512;
+  Serial.print(volumesize/1024);
+  Serial.println(" Kb"); 
+
+  Serial.println("\nFiles on the SD card: ");
+  root.openRoot(volume);
+  
+  // list all files in the card with date and size
+  root.ls(LS_R | LS_DATE | LS_SIZE);
+}
+
+bool ReadWriteTest()
+{
+  File myFile;
+  char filename[] = "testfile.txt";
+  char writestring[] = "abcdefghijklmnopqrstuvwxyz1234567890";
+  char readstring[40];
+
+  // First remove the file is it already exists
+  if (SD.exists(filename)) {
+    SD.remove(filename);
+  }
+  
+  // Open file to write
+  myFile = SD.open(filename, FILE_WRITE);
+  
+  // If okay, write to the file
+  if (myFile) {
+    Serial.print("Writing to file...  ");
+    myFile.print(writestring);
+    myFile.close();
+    Serial.print('[');
+    Serial.print(writestring);
+    Serial.println("] done.");
+  } 
+  else 
+  {
+    // Error writing to the file
+    Serial.println("error opening testfile.txt");
+  }
+  
+  // Open file to read. Which is the default option
+  myFile = SD.open(filename, FILE_READ);
+  if (myFile) {
+    Serial.print("Reading from file...");
+    int n = 0;
+    while (myFile.available()) {
+      if (n<39)
+      {
+        readstring[n] = myFile.read();
+        readstring[n+1] = '\0';
+      }
+      n=n+1;
+    }
+    myFile.close();
+    Serial.print('[');
+    Serial.print(readstring);
+    Serial.println("] done.");
+  } 
+  else 
+  {
+    // Error reading from the file
+    Serial.println("error opening testfile.txt");
+  }
+
+  // Return true if the two char arrays are equal
+  if (strcmp(writestring, readstring) == 0){
+    return true;
+  }
+  return false;
+}
+
 
 
