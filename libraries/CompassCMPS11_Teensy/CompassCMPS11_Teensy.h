@@ -28,6 +28,7 @@
   #define _Register_CONTROLLER 0
 
   #define COMMUNICATION_TIMEOUT 1000
+  #define TIMEOUT_MICROSECONDS 1000
 
   #define _ONE_BYTE 1
   #define _TWO_BYTES 2

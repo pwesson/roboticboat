@@ -70,7 +70,7 @@ int16_t CompassCMPS11_Teensy::getBearing()
   i2c_t3(_bus).write(_Register_BEARING);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -110,7 +110,7 @@ byte CompassCMPS11_Teensy::getPitch()
   i2c_t3(_bus).write(_Register_PITCH);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -143,7 +143,7 @@ byte CompassCMPS11_Teensy::getRoll()
   i2c_t3(_bus).write(_Register_ROLL);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -176,7 +176,7 @@ int16_t CompassCMPS11_Teensy::getGyroX()
   i2c_t3(_bus).write(_Register_GYRO_X);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -211,7 +211,7 @@ int16_t CompassCMPS11_Teensy::getGyroY()
   i2c_t3(_bus).write(_Register_GYRO_Y);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -246,7 +246,7 @@ int16_t CompassCMPS11_Teensy::getGyroZ()
   i2c_t3(_bus).write(_Register_GYRO_Z);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -281,7 +281,7 @@ int16_t CompassCMPS11_Teensy::getAcceleroX()
   i2c_t3(_bus).write(_Register_ACCELERO_X);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -316,7 +316,7 @@ int16_t CompassCMPS11_Teensy::getAcceleroY()
   i2c_t3(_bus).write(_Register_ACCELERO_Y);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -351,7 +351,7 @@ int16_t CompassCMPS11_Teensy::getAcceleroZ()
   i2c_t3(_bus).write(_Register_ACCELERO_Z);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -387,7 +387,7 @@ int16_t CompassCMPS11_Teensy::getMagnetX()
   i2c_t3(_bus).write(_Register_MAGNET_X);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -422,7 +422,7 @@ int16_t CompassCMPS11_Teensy::getMagnetY()
   i2c_t3(_bus).write(_Register_MAGNET_Y);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -457,7 +457,7 @@ int16_t CompassCMPS11_Teensy::getMagnetZ()
   i2c_t3(_bus).write(_Register_MAGNET_Z);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -492,7 +492,7 @@ float CompassCMPS11_Teensy::getTemperature()
   i2c_t3(_bus).write(_Register_TEMP);
 
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
@@ -537,7 +537,7 @@ void CompassCMPS11_Teensy::changeAddress(byte i2cAddress, byte newi2cAddress)
   i2c_t3(_bus).write(byte(0xA0));
   
   // End the transmission
-  int nackCatcher = i2c_t3(_bus).endTransmission();
+  int nackCatcher = i2c_t3(_bus).endTransmission(I2C_STOP, TIMEOUT_MICROSECONDS);
 
   //Wait 100ms
   delay(100);
