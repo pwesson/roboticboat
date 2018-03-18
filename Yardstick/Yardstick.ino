@@ -1,6 +1,10 @@
 #include <SD.h>
 #include <Servo.h>
 #include <math.h>
+#include <Arduino.h>
+
+// #define USE_DUE_CAN 1
+#define N2K_SOURCE 15
 
 //  ____            _     _           
 // |  _ \ _   _  __| | __| | ___ _ __ 
@@ -26,21 +30,25 @@
                                                               
 #include <AdaGPS.h>
 
-//  _     _____ ____    ____  _           _             
-// | |   | ____|  _ \  |  _ \(_)___ _ __ | | __ _ _   _ 
-// | |   |  _| | | | | | | | | / __| '_ \| |/ _` | | | |
-// | |___| |___| |_| | | |_| | \__ \ |_) | | (_| | |_| |
-// |_____|_____|____/  |____/|_|___/ .__/|_|\__,_|\__, |
-//                                 |_|            |___/ 
-#include <Adafruit_AlphaNum_Teensy.h>
-                   
+// These libraries were downloaded from https://github.com/ttlappalainen
+#include <NMEA2000_CAN.h>
+#include <N2kMsg.h>
+#include <NMEA2000_teensy.h>
+#include <N2kMessages.h>
+#include <N2kDeviceList.h>
+
+// Pointers to NMEA 2000 devices
+tN2kDeviceList *pN2kDeviceList;
+const tNMEA2000::tDevice* pDevice;
+const unsigned long* listPGN;
+
+double gpslatitude = 0;
+double gpslongitude = 0;
 
 //Is Robot in control of the human
 bool IsHuman = true;
 
-volatile int wifiptr = 0;
-volatile int wifilen = 0;
-char wifibuffer[105];
+int i=0;
 
 //Radio Control Receiver
 int ch1 = 0;
@@ -64,9 +72,6 @@ CompassCMPS11_Teensy compass1;
 
 //A GPS library
 AdaGPS gps;
-
-// LED Display
-Adafruit_AlphaNum_Teensy Alpha;
 
 //
 // The Adafruit GPS flashes oncee every 15 seconds when it has found a fix
@@ -118,16 +123,6 @@ void setup()
   //Set the rudder range
   myrudder.maxposition = 90 + 40;
   myrudder.minposition = 90 - 40;
-
-  // LED display setup
-  Alpha.begin(0x70, 1);  // pass in the address
-  Alpha.clear();
-
-  // The single zero shows the LED works.
-  // It will got blank once depth signal is pickedup
-  Alpha.writeDigitAscii(3, 0, false);
-  Alpha.writeDisplay();
-  Alpha.setBrightness(1);
   
   // Initialise the GPS module
   Serial.println("Initializing GPS");
@@ -141,9 +136,6 @@ void setup()
 
   // Send setup command to the GPS module
   Serial1.println("$PMTK220,1000*1F"); // Once per second (1Hz)
-  //Serial1.println("$PMTK220,200*2C");  //  5 times a second
-  //Serial1.println("$PMTK220,100*2F");  // 10 times a second (10Hz)
-  //At faster speeds need to set Serial1 at faster frequency
   delay(100);
 
   // Initialize the compass and initial readings
@@ -152,15 +144,8 @@ void setup()
   BoatHeading = compass1.getBearing();
   oldBoatHeading = BoatHeading;
 
-  // Initialise the SD card
-  if (!SD.begin(BUILTIN_SDCARD))
-  {
-    Serial.println("SD failed");
-    return;
-  }
-
-  // Setup connection to the ESP8266 WiFi module
-  Serial2.begin(9600);
+ // Initialise the SD card
+  InitialiseSDcard(10);
 
   //Set the last time
   lasttime = 0;
@@ -169,6 +154,21 @@ void setup()
   // These numbers were found by trial and error
   // The rudders on Yardstick are very sensitive
   myrudder.SetGyroRegressionStatic(0.70, -65);
+
+  // Do not forward bus messages
+  NMEA2000.EnableForward(false);
+
+  // NMEA2000 event function to call
+  NMEA2000.SetMsgHandler(HandleNMEA2000Msg);
+
+  // Define address (50) to something not already on the network
+  NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, 50);
+
+  pN2kDeviceList = new tN2kDeviceList(&NMEA2000);
+
+  // Open connection to the NMEA2000 network
+  NMEA2000.Open();
+  
 }
 
 void serialEvent1()
@@ -182,95 +182,13 @@ void serialEvent1()
   }
 }
 
-void serialEvent2()
-{
-  // This event is called when Serial2 receives new bytes
-  //
-  // Yardstick sets up a local WiFi called "Yardstick Robotic Boat" using ESP8266
-  // Remember it takes some minutes for the ESP8266 to set itself up before website works
-  // The boat IP address on that WiFi is  http://192.168.4.1/
-  // A Windows tablet onboard connected to NMEA2000 measures the depth.
-  // Every second tablet then requests the web page http://192.168.4.1/Depth=00.00
-  // The Teensy (via WiFi) reads the requested webpage. So can figure out the depth
-  // 
-  while (Serial2.available())
-  {
-    // Read the new byte:
-    char nextChar = (char)Serial2.read(); 
-    
-    // End of Message?
-    if (nextChar == '\n')
-    {
-      // Open the wifi disk file
-      File wifiFile = SD.open("wifilog.txt", FILE_WRITE);
+void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 
-      Serial.print("yard18,$TMR,");
-      Serial.print(mytime);
-      Serial.print(",$WIFI,");
-      Serial.println(wifibuffer);
-
-      // Do we have the string we are looking for?
-      // Check the first 6 characters
-      if (strncmp("Depth=", wifibuffer, 6) == 0)
-      {
-        // We match the first characters. Now check the rest of the format Depth=00.00
-        // strlen gets the length of a null-terminated string. Check for the .
-        // Can show reading up to 100m, approx max depth of DST 800 transducer
-        if (strlen(wifibuffer) == 12 && wifibuffer[8] == '.'){
-          
-            // So we want to show the following characters
-            // Depth= wifibuffer[6] wifibuffer[7] . wifibuffer[9] wifibuffer[10]
-            // Character '0'=48, '1'=49, '2'=50, ...       '9'=57
-            
-            // Need to check for data quality
-            if (wifibuffer[6] >= 48 && wifibuffer[6] <=57){
-              Alpha.writeDigitAscii(0, wifibuffer[6]-48, false); // false = no decimal point  
-            }
-            if (wifibuffer[7] >= 48 && wifibuffer[7] <=57){
-              Alpha.writeDigitAscii(1, wifibuffer[7]-48, true); // false = no decimal point
-            }
-            if (wifibuffer[9] >= 48 && wifibuffer[9] <=57){
-              Alpha.writeDigitAscii(2, wifibuffer[9]-48, false); // true = decimal point
-            }
-            if (wifibuffer[10] >= 48 && wifibuffer[10] <=57){
-              Alpha.writeDigitAscii(3, wifibuffer[10]-48, false); // false = no decimal point
-            }
-                       
-            Alpha.writeDisplay();
-        }
-        else
-        {
-          // We have lost the depth reading. So turn off the display
-          Alpha.clear();
-          Alpha.writeDisplay();
-        }
-      }
-        
-      // Can we write to the file
-      if (wifiFile)
-      {
-        wifiFile.print("yard18,$TMR,");
-        wifiFile.print(mytime);
-        wifiFile.print(",$WIFI,");
-        wifiFile.println(wifibuffer);       
-        wifiFile.close();
-      }
-      
-      // Reset the message counter
-      wifiptr = 0;
-    }
-    else
-    {
-      // Message still being built
-      wifibuffer[wifiptr] = nextChar;
-      // Ensure a null-terminated string
-      wifibuffer[wifiptr + 1] = '\0';
-
-      // Move on to the next character
-      wifiptr = wifiptr + 1;
-      if (wifiptr >= 100) wifiptr = 100;
-    }
-  }
+  // We want to process the message
+  if (N2kMsg.PGN == 128259L) Speed(N2kMsg);
+  if (N2kMsg.PGN == 128267L) WaterDepth(N2kMsg);
+  if (N2kMsg.PGN == 129029L) GNSS(N2kMsg);
+  if (N2kMsg.PGN == 130311L) WaterTemperature(N2kMsg);
 }
 
 void loop()
@@ -417,7 +335,7 @@ void loop()
 
 
   // Print data to Serial Monitor window
-  Serial.print("yard18,$TMR,");
+  Serial.print("yardstick21,$TMR,");
   Serial.print(mytime);
   Serial.print(",$RC,");
   Serial.print(ch1);
@@ -494,7 +412,7 @@ void loop()
 
   if (dataFile)
   {
-    dataFile.print("yard18,$TMR,");
+    dataFile.print("yardstick21,$TMR,");
     dataFile.print(mytime);
     dataFile.print(",$RC,");
     dataFile.print(ch1);
@@ -581,6 +499,345 @@ void loop()
 
     dataFile.close();
   }
+
+  NMEA2000.ParseMessages();
+  CheckDevices();
 }
 
+void WaterDepth(const tN2kMsg &N2kMsg) {
+
+  unsigned char SID;
+  double DepthBelowTransducer;
+  double Offset;
+
+  if (ParseN2kWaterDepth(N2kMsg, SID, DepthBelowTransducer, Offset) )
+  {
+    Serial.print("v8,Depth,");
+    Serial.println(DepthBelowTransducer);
+    
+    File dataFile = SD.open("nmea2000.txt", FILE_WRITE);
+
+    if (dataFile)
+    {
+      dataFile.print("yardstick21,Depth,");
+      dataFile.print(DepthBelowTransducer); dataFile.print(",");
+      dataFile.print(gpslatitude, 10); dataFile.print(",");
+      dataFile.println(gpslongitude, 10);
+
+      dataFile.close();
+    }
+  }
+}
+
+void Speed(const tN2kMsg &N2kMsg)
+{
+  unsigned char SID;
+  double WaterReferenced;
+  double GroundReferenced;
+  tN2kSpeedWaterReferenceType SWRT;
+
+  if (ParseN2kPGN128259(N2kMsg, SID, WaterReferenced, GroundReferenced, SWRT))
+  {
+    Serial.print("yardstick21,Speed,");
+    Serial.println(WaterReferenced);
+
+    File dataFile = SD.open("nmea2000.txt", FILE_WRITE);
+
+    if (dataFile)
+    {
+      dataFile.print("yardstick21,Speed,");
+      dataFile.print(WaterReferenced); dataFile.print(",");
+      dataFile.print(gpslatitude, 10); dataFile.print(",");
+      dataFile.println(gpslongitude, 10);
+
+      dataFile.close();
+    }
+  }
+
+}
+
+void WaterTemperature(const tN2kMsg &N2kMsg)
+{
+  unsigned char SID;
+  tN2kTempSource TempSource;
+  double Temperature;
+  tN2kHumiditySource HumiditySource;
+  double Humidity;
+  double AtmosphericPressure;
+
+  if (ParseN2kPGN130311(N2kMsg, SID, TempSource, Temperature, HumiditySource, Humidity, AtmosphericPressure))
+  {
+    Serial.print("yardstick21,Temperature,");
+    Serial.println(Temperature);
+
+    File dataFile = SD.open("nmea2000.txt", FILE_WRITE);
+
+    if (dataFile)
+    {
+      dataFile.print("yardstick21,Temperature,");
+      dataFile.print(Temperature - 273.15); dataFile.print(",");
+      dataFile.print(gpslatitude, 10); dataFile.print(",");
+      dataFile.println(gpslongitude, 10);
+
+      dataFile.close();
+    }
+  }
+}
+
+void GNSS(const tN2kMsg &N2kMsg) {
+
+  unsigned char SID;
+  uint16_t DaysSince1970;
+  double SecondsSinceMidnight;
+  double Latitude;
+  double Longitude;
+  double Altitude;
+  tN2kGNSStype GNSStype;
+  tN2kGNSSmethod GNSSmethod;
+  unsigned char nSatellites;
+  double HDOP;
+  double PDOP;
+  double GeoidalSeparation;
+  unsigned char nReferenceStations;
+  tN2kGNSStype ReferenceStationType;
+  uint16_t ReferenceSationID;
+  double AgeOfCorrection;
+
+  if (ParseN2kGNSS(N2kMsg, SID, DaysSince1970, SecondsSinceMidnight,
+                   Latitude, Longitude, Altitude,
+                   GNSStype, GNSSmethod,
+                   nSatellites, HDOP, PDOP, GeoidalSeparation,
+                   nReferenceStations, ReferenceStationType, ReferenceSationID,
+                   AgeOfCorrection) )
+  {
+    //Store the values
+    gpslatitude = Latitude;
+    gpslongitude = Longitude;
+
+    Serial.print("yardstick21,GNSS,");
+    Serial.print(DaysSince1970); Serial.print(",");
+    Serial.print(SecondsSinceMidnight); Serial.print(",");
+    Serial.print(Latitude, 10); Serial.print(",");
+    Serial.print(Longitude, 10); Serial.print(",");
+    Serial.print(Altitude); Serial.print(",");
+    Serial.print(GNSStype); Serial.print(",");
+    Serial.print(GNSSmethod); Serial.print(",");
+    Serial.print(nSatellites); Serial.print(",");
+    Serial.print(HDOP); Serial.print(",");
+    Serial.print(PDOP); Serial.print(",");
+    Serial.print(GeoidalSeparation); Serial.print(",");
+    Serial.println(nReferenceStations);
+
+    File dataFile = SD.open("nmea2000.txt", FILE_WRITE);
+
+    if (dataFile)
+    {
+      dataFile.print("yardstick21,GNSS,");
+      dataFile.print(DaysSince1970); dataFile.print(",");
+      dataFile.print(SecondsSinceMidnight); dataFile.print(",");
+      dataFile.print(Latitude, 10); dataFile.print(",");
+      dataFile.print(Longitude, 10); dataFile.print(",");
+      dataFile.print(Altitude); dataFile.print(",");
+      dataFile.print(GNSStype); dataFile.print(",");
+      dataFile.print(GNSSmethod); dataFile.print(",");
+      dataFile.print(nSatellites); dataFile.print(",");
+      dataFile.print(HDOP); dataFile.print(",");
+      dataFile.print(PDOP); dataFile.print(",");
+      dataFile.print(GeoidalSeparation); dataFile.print(",");
+      dataFile.println(nReferenceStations);
+
+      dataFile.close();
+    }
+  }
+}
+
+void CheckDevices() {
+
+  // Only find out information if a new device is detected
+  if (!pN2kDeviceList->ReadResetIsListUpdated() ) return;
+
+  // Loop over possible devices
+  for (uint8_t i = 0; i < N2kMaxBusDevices; i++) {
+
+    // Using the Source to find the device
+    pDevice = pN2kDeviceList->FindDeviceBySource(i);
+
+    // If nothing detected then continue to next device
+    if (pDevice == 0) continue;
+
+    uint8_t j;
+
+    // We have detected a device, so upgrade User with information
+    Serial.print("Device=" ); Serial.print(pDevice->GetModelID());
+    Serial.print(",Source="); Serial.print(pDevice->GetSource());
+    Serial.print(",Manufactuer="); Serial.print(pDevice->GetManufacturerCode());
+    Serial.print(",Unique="); Serial.print(pDevice->GetUniqueNumber());
+    Serial.print(",Software="); Serial.print(pDevice->GetSwCode());
+    Serial.print(",Model="); Serial.print(pDevice->GetModelVersion());
+    listPGN = pDevice->GetTransmitPGNs();
+    Serial.print(",PGN=");
+    for (j = 0; listPGN[j] != 0; j++) {
+      Serial.print(" "); Serial.print(listPGN[j]);
+    }
+    Serial.println();
+
+    File dataFile = SD.open("nmea2000.txt", FILE_WRITE);
+
+    if (dataFile)
+    {
+      dataFile.print("Device=" ); dataFile.print(pDevice->GetModelID());
+      dataFile.print(",Source="); dataFile.print(pDevice->GetSource());
+      dataFile.print(",Manufactuer="); dataFile.print(pDevice->GetManufacturerCode());
+      dataFile.print(",Unique="); dataFile.print(pDevice->GetUniqueNumber());
+      dataFile.print(",Software="); dataFile.print(pDevice->GetSwCode());
+      dataFile.print(",Model="); dataFile.print(pDevice->GetModelVersion());
+      dataFile.print(",PGN=");
+      for (j = 0; listPGN[j] != 0; j++) {
+        dataFile.print(" "); dataFile.print(listPGN[j]);
+      }
+      dataFile.println();
+      dataFile.close();
+    }
+  }
+}
+
+
+void InitialiseSDcard(int testseconds)
+{
+  Serial.print("Initializing SD card...");
+
+  if (!SD.begin(BUILTIN_SDCARD)) {
+    Serial.println("SD failed");
+    for (i=1;i<=testseconds;i++)
+    {
+      digitalWrite(13, HIGH);
+      delay(100);
+      digitalWrite(13, LOW);
+      delay(900);
+    }
+    return;
+  }
+  Serial.println("done.");
+
+  if (ReadWriteTest()){
+    Serial.println("OK");
+    digitalWrite(13, HIGH);
+    delay(testseconds * 1000);
+    digitalWrite(13, LOW);
+  }
+  else
+  {
+    Serial.println("ERROR");
+    for (i=1;i<=testseconds;i++)
+    {
+      digitalWrite(13, HIGH);
+      delay(500);
+      digitalWrite(13, LOW);
+      delay(500);
+    }
+  }  
+}
+
+void InfoTest()
+{
+  Sd2Card SDcard;
+  SdVolume volume;
+  SdFile root;
+
+  // Card information
+  Serial.print("\nCard info: ");
+  switch(SDcard.type()) {
+    case SD_CARD_TYPE_SD1:
+      Serial.print("SD1"); break;
+    case SD_CARD_TYPE_SD2:
+      Serial.print("SD2"); break;
+    case SD_CARD_TYPE_SDHC:
+      Serial.print("SDHC"); break;
+    default:
+      Serial.print("Unknown");
+  }
+
+  // Find the volume on the SD card
+  if (!volume.init(SDcard)) {
+    Serial.println("\nNo FAT16/FAT32 partition.");
+    return;
+  }
+
+  // FAT type
+  uint32_t volumesize;
+  Serial.print(", FAT"); Serial.print(volume.fatType(), DEC);
+  Serial.print(", ");
+  
+  // Sector size (or Blocks) is fixed at 512 bytes
+  volumesize = volume.blocksPerCluster() * volume.clusterCount() * 512;
+  Serial.print(volumesize/1024);
+  Serial.println(" Kb"); 
+
+  Serial.println("\nFiles on the SD card: ");
+  root.openRoot(volume);
+  
+  // list all files in the card with date and size
+  root.ls(LS_R | LS_DATE | LS_SIZE);
+}
+
+bool ReadWriteTest()
+{
+  File myFile;
+  char filename[] = "testfile.txt";
+  char writestring[] = "abcdefghijklmnopqrstuvwxyz1234567890";
+  char readstring[40];
+
+  // First remove the file is it already exists
+  if (SD.exists(filename)) {
+    SD.remove(filename);
+  }
+  
+  // Open file to write
+  myFile = SD.open(filename, FILE_WRITE);
+  
+  // If okay, write to the file
+  if (myFile) {
+    Serial.print("Writing to file...  ");
+    myFile.print(writestring);
+    myFile.close();
+    Serial.print('[');
+    Serial.print(writestring);
+    Serial.println("] done.");
+  } 
+  else 
+  {
+    // Error writing to the file
+    Serial.println("error opening testfile.txt");
+  }
+  
+  // Open file to read. Which is the default option
+  myFile = SD.open(filename, FILE_READ);
+  if (myFile) {
+    Serial.print("Reading from file...");
+    int n = 0;
+    while (myFile.available()) {
+      if (n<39)
+      {
+        readstring[n] = myFile.read();
+        readstring[n+1] = '\0';
+      }
+      n=n+1;
+    }
+    myFile.close();
+    Serial.print('[');
+    Serial.print(readstring);
+    Serial.println("] done.");
+  } 
+  else 
+  {
+    // Error reading from the file
+    Serial.println("error opening testfile.txt");
+  }
+
+  // Return true if the two char arrays are equal
+  if (strcmp(writestring, readstring) == 0){
+    return true;
+  }
+  return false;
+}
 
