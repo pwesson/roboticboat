@@ -106,15 +106,15 @@ bool AdaGPS::CheckSum(char* msg) {
 
 void AdaGPS::checkGPGGA() {
 
-// $GPGGA,130048.000,0000.0000,N,00000.0000,E,1,10,1.1,75.5,M,47.0,M,,0000*00
+   // $GPGGA,094728.000,5126.4900,N,00016.0200,E,2,08,1.30,19.4,M,47.0,M,0000,0000*52
 
   // Do we have a GPGGA message?
   if (strstr(gpsfields[0], "$GPGGA")) {
 
-    gpstime = atol(gpsfields[1]);      // 130048.000
-    latitude = atof(gpsfields[2]);     // 0000.0000
+    gpstime = atol(gpsfields[1]);      // 094728.000
+    latitude = atof(gpsfields[2]);     // 5126.4900
     latNS = gpsfields[3][0];           // N
-    longitude = atof(gpsfields[4]);    // 00000.0000
+    longitude = atof(gpsfields[4]);    // 00016.0200
     lonEW = gpsfields[5][0];           // E
     fixquality = atof(gpsfields[6]);   // Fix quality (1=GPS)(2=DGPS)
     numsatelites = atoi(gpsfields[7]); // Number of satellites being tracked
@@ -133,20 +133,20 @@ void AdaGPS::checkGPGGA() {
 
 void AdaGPS::checkGPRMC() {
 
-//$GPRMC,111837.000,A,0000.0000,N,00000.0000,E,0.44,147.21,111015,,,A*6A
+  // $GPRMC,094728.000,A,5126.4900,N,00016.0200,E,0.01,259.87,310318,,,D*6B
 
   // Do we have a GPRMC message?
   if (strstr(gpsfields[0], "$GPRMC")) {
 
-    gpstime = atol(gpsfields[1]);      // 111837.000
+    gpstime = atol(gpsfields[1]);      // 094728.000
     gpsstatus = gpsfields[2][0];       // Status A=active or V=Void.
-    latitude = atof(gpsfields[3]);     // 0000.0000
+    latitude = atof(gpsfields[3]);     // 5126.4900
     latNS = gpsfields[4][0];           // N
-    longitude = atof(gpsfields[5]);    // 00000.0000
+    longitude = atof(gpsfields[5]);    // 00016.0200
     lonEW = gpsfields[6][0];           // E
     gpsknots = atof(gpsfields[7]);     // Speed over the ground in knots
     gpstrack = atof(gpsfields[8]);     // Track angle in degrees True
-    gpsdate = atof(gpsfields[9]);      // Date - 11th of October 2015
+    gpsdate = atof(gpsfields[9]);      // Date - 31st of March 2018
                                        // Magnetic Variation
                                        // The checksum data, always begins with *
 

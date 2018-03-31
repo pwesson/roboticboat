@@ -18,7 +18,8 @@
 		void SetSensitivity(int);
 		
 		int Update(double, double, float);
-                
+                int Update(float);
+		
 		Navigation nav;
 		WeightedLeastSquares wls;
 		WeightedLeastSquares gyro;

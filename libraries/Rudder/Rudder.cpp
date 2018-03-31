@@ -77,6 +77,9 @@ void Rudder::ClearLine()
     
   waypointB.latitude = 0;
   waypointB.longitude = 0;
+
+  alongtrack = 0;
+  crosstrack = 0;
 }
 
 
@@ -180,4 +183,10 @@ int Rudder::Update(double latitude, double longitude, float bearing)
    // Negative sign as gyro has positive change as bearing reduce
    return (int)gyro.PredictXlimit(-requiredBearingChange/sensitivity, minposition , maxposition);
 
+}
+
+int Rudder::Update(float degreechange)
+{
+   // This should compensate for some weather helm
+   return (int)gyro.PredictXlimit(-degreechange/sensitivity, minposition , maxposition);
 }
