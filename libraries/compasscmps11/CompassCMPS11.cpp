@@ -495,16 +495,17 @@ void CompassCMPS11::changeAddress(byte i2cAddress, byte newi2cAddress)
   // Reset the address on the i2c network
   // Ensure that you have only this module connected on the i2c network
   // The 7 bit i2c address must end with a 0. (even numbers please)
-  // For example changeAddress(0x60, 0x64)
+  // For example changeAddress(0x60, 0xC4)
+  // Notice send 0xC4 if you want the address 0x64
 
-  // Address 0x60, 1 long flash, 0 short flashes
-  // Address 0x62, 1 long flash, 1 short flashes
-  // Address 0x64, 1 long flash, 2 short flashes
-  // Address 0x66, 1 long flash, 3 short flashes
-  // Address 0x68, 1 long flash, 4 short flashes
-  // Address 0x6A, 1 long flash, 5 short flashes
-  // Address 0x6C, 1 long flash, 6 short flashes
-  // Address 0x6E, 1 long flash, 7 short flashes
+  // Address wanted 0x60, so send 0xC0: 1 long flash, 0 short flashes
+  // Address wanted 0x62, so send 0xC2: 1 long flash, 1 short flashes
+  // Address wanted 0x64, so send 0xC4: 1 long flash, 2 short flashes
+  // Address wanted 0x66, so send 0xC6: 1 long flash, 3 short flashes
+  // Address wanted 0x68, so send 0xC8: 1 long flash, 4 short flashes
+  // Address wanted 0x6A, so send 0xCA: 1 long flash, 5 short flashes
+  // Address wanted 0x6C, so send 0xCC: 1 long flash, 6 short flashes
+  // Address wanted 0x6E, so send 0xCE: 1 long flash, 7 short flashes
 
   // Begin communication
   Wire.beginTransmission(i2cAddress);
