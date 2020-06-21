@@ -107,8 +107,8 @@ bool ParallaxPMB688::CheckSum(char* msg) {
 
 void ParallaxPMB688::checkGPGGA() {
 
-  // Do we have a GPGGA message?
-  if (strstr(gpsfields[0], "$GPGGA")) {
+  // Do we have a GGA message?
+  if (strstr(gpsfields[0], "GGA")) {
 
     gpstime = atof(gpsfields[1]);      // 130048.000
     latitude = atof(gpsfields[2]);     // 0000.0000
@@ -132,8 +132,8 @@ void ParallaxPMB688::checkGPGGA() {
 
 void ParallaxPMB688::checkGPRMC() {
 
-  // Do we have a GPRMC message?
-  if (strstr(gpsfields[0], "$GPRMC")) {
+  // Do we have a RMC message?
+  if (strstr(gpsfields[0], "RMC")) {
 
     gpstime = atof(gpsfields[1]);      // 111837.000
     gpsstatus = gpsfields[2][0];       // Status A=active or V=Void.

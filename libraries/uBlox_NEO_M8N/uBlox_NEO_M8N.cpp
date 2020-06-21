@@ -16,14 +16,14 @@
 // England and Wales, without regard to its conflict of law provisions.
 
 
-#include "uBlox_PAM_7Q.h"
+#include "uBlox_NEO_M8N.h"
 
-uBlox_PAM_7Q::uBlox_PAM_7Q(HardwareSerial *serialPort){
+uBlox_NEO_M8N::uBlox_NEO_M8N(HardwareSerial *serialPort){
 
   gpsSerial = serialPort;
 }
 
-void uBlox_PAM_7Q::read(char nextChar){
+void uBlox_NEO_M8N::read(char nextChar){
 
   // Start of a GPS message
   if (nextChar == '$') {
@@ -75,7 +75,7 @@ void uBlox_PAM_7Q::read(char nextChar){
   }
 }
 
-bool uBlox_PAM_7Q::CheckSum(char* msg) {
+bool uBlox_NEO_M8N::CheckSum(char* msg) {
 
   // Check the checksum
   //$GPGGA,.........................0000*6A
@@ -104,7 +104,7 @@ bool uBlox_PAM_7Q::CheckSum(char* msg) {
 }
 
 
-void uBlox_PAM_7Q::checkGPGGA() {
+void uBlox_NEO_M8N::checkGPGGA() {
 
   // Do we have a GGA message?
   if (strstr(gpsfields[0], "GGA")) {
@@ -129,7 +129,7 @@ void uBlox_PAM_7Q::checkGPGGA() {
 }
 
 
-void uBlox_PAM_7Q::checkGPRMC() {
+void uBlox_NEO_M8N::checkGPRMC() {
 
   // Do we have a RMC message?
   if (strstr(gpsfields[0], "RMC")) {
@@ -140,8 +140,8 @@ void uBlox_PAM_7Q::checkGPRMC() {
     latNS = gpsfields[4][0];        // N
     longitude = atof(gpsfields[5]); // 00000.0000
     lonEW = gpsfields[6][0];        // E
-                                    // Speed over the ground in knots
-                                    // Track angle in degrees True
+    gpsknots = atof(gpsfields[7]);  // Speed over the ground in knots
+    gpstrack = atof(gpsfields[8]);  // Track angle in degrees True
     gpsdate = atof(gpsfields[9]);   // Date - 11th of October 2015
                                     // Magnetic Variation
                                     // The checksum data, always begins with *
@@ -152,7 +152,7 @@ void uBlox_PAM_7Q::checkGPRMC() {
 }
 
 
-float uBlox_PAM_7Q::DegreeToDecimal(float num, byte sign)
+float uBlox_NEO_M8N::DegreeToDecimal(float num, byte sign)
 {
    // Want to convert DDMM.MMMM to a decimal number DD.DDDDD
 
@@ -171,7 +171,7 @@ float uBlox_PAM_7Q::DegreeToDecimal(float num, byte sign)
    return -(degree + (mins + decpart)/60);
 }
 
-void uBlox_PAM_7Q::parseString(char* msg) {
+void uBlox_NEO_M8N::parseString(char* msg) {
 
   // Length of the GPS message
   int len = strlen(msg);
@@ -204,7 +204,7 @@ void uBlox_PAM_7Q::parseString(char* msg) {
 
 
 // Convert HEX to DEC
-int uBlox_PAM_7Q::Hex2Dec(char c) {
+int uBlox_NEO_M8N::Hex2Dec(char c) {
 
   if (c >= '0' && c <= '9') {
     return c - '0';
@@ -218,7 +218,7 @@ int uBlox_PAM_7Q::Hex2Dec(char c) {
 }
 
 
-void uBlox_PAM_7Q::AllSentences()
+void uBlox_NEO_M8N::AllSentences()
 {
   // NMEA_GLL output interval - Geographic Position - Latitude longitude
   // NMEA_RMC output interval - Recommended Minimum Specific GNSS Sentence
@@ -253,7 +253,7 @@ void uBlox_PAM_7Q::AllSentences()
 }
 
 
-void uBlox_PAM_7Q::SelectSentences()
+void uBlox_NEO_M8N::SelectSentences()
 {
   // NMEA_GLL output interval - Geographic Position - Latitude longitude
   // NMEA_RMC output interval - Recommended Minimum Specific GNSS Sentence
