@@ -1,12 +1,8 @@
-#ifndef CirocommGPS_h
-  #define CirocommGPS_h
+#ifndef ParallaxPMB688_h
+  #define ParallaxPMB688_h
 
-  #if ARDUINO >= 100
-    #include "Arduino.h"
-  #else
-    #include "WProgram.h"
-  #endif
-
+  #include "Arduino.h"
+  
   // Define byte lengths
   #define _ONE_BYTE 1
   #define _TWO_BYTES 2
@@ -15,9 +11,10 @@
   #define MAXNUMFIELDS 25
   #define MAXFIELDLENGTH 11
 
-  class CirocommGPS{
+  class ParallaxPMB688{
 	public:
-		CirocommGPS();
+		HardwareSerial *gpsSerial;
+		ParallaxPMB688(HardwareSerial *serialPort);
 		void read(char);
                 void checkGPGGA();
 		void checkGPRMC();
@@ -25,6 +22,10 @@
 		int Hex2Dec(char);
                 void parseString(char*);
 		void SetGPSWalkMode();
+		void SelectSentences();
+		void AllSentences();
+		void Binary2NMEA();
+		void NMEA2Binary();
 		float DegreeToDecimal(float, byte);
                
   		float gpstime;
