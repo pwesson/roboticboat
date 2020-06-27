@@ -16,14 +16,14 @@
 // England and Wales, without regard to its conflict of law provisions.
 
 
-#include "uBlox_NEO_M8N.h"
+#include "EverMoreSA320.h"
 
-uBlox_NEO_M8N::uBlox_NEO_M8N(HardwareSerial *serialPort){
+EverMoreSA320::EverMoreSA320(HardwareSerial *serialPort){
 
   gpsSerial = serialPort;
 }
 
-void uBlox_NEO_M8N::listen(){
+void EverMoreSA320::listen(){
 
   while (gpsSerial->available())
   {
@@ -31,7 +31,7 @@ void uBlox_NEO_M8N::listen(){
   }
 }
 
-void uBlox_NEO_M8N::read(char nextChar){
+void EverMoreSA320::read(char nextChar){
 
   // Start of a GPS message
   if (nextChar == '$') {
@@ -46,7 +46,7 @@ void uBlox_NEO_M8N::read(char nextChar){
 
     if (flag) {
       flag = false;
-      
+
       // Set termination character of the current buffer
       redbuffer[ptr] = '\0';
 
@@ -63,7 +63,10 @@ void uBlox_NEO_M8N::read(char nextChar){
       // Process the message if the checksum is correct
       if (CheckSum((char*) blubuffer )) {parseString((char*) blubuffer );}
     }   
+
+    // Reset the pointer
     ptr = 0; 
+
   }
 
   // Add a new character
@@ -74,7 +77,7 @@ void uBlox_NEO_M8N::read(char nextChar){
 
 }
 
-bool uBlox_NEO_M8N::CheckSum(char* msg) {
+bool EverMoreSA320::CheckSum(char* msg) {
 
   // Check the checksum
   //$GPGGA,.........................0000*6A
@@ -83,7 +86,7 @@ bool uBlox_NEO_M8N::CheckSum(char* msg) {
   int len = strlen(msg);
 
   // Does it contain the checksum, to check
-  if (msg[len-4] == '*') {
+  if (len>3 && msg[len-4] == '*') {
 
 	// Read the checksum from the message
 	int cksum = 16 * Hex2Dec(msg[len-3]) + Hex2Dec(msg[len-2]);
@@ -102,8 +105,7 @@ bool uBlox_NEO_M8N::CheckSum(char* msg) {
   return false;
 }
 
-
-float uBlox_NEO_M8N::DegreeToDecimal(float num, byte sign)
+float EverMoreSA320::DegreeToDecimal(float num, byte sign)
 {
    // Want to convert DDMM.MMMM to a decimal number DD.DDDDD
 
@@ -122,14 +124,14 @@ float uBlox_NEO_M8N::DegreeToDecimal(float num, byte sign)
    return -(degree + (mins + decpart)/60);
 }
 
-void uBlox_NEO_M8N::parseString(char* msg) {
-
+void EverMoreSA320::parseString(char* msg) {
+ 
   messageGGA(msg);
   messageRMC(msg);
 }
 
 
-void uBlox_NEO_M8N::messageGGA(char* msg) 
+void EverMoreSA320::messageGGA(char* msg) 
 {
   // $GPGGA,094728.000,5126.4900,N,00016.0200,E,2,08,1.30,19.4,M,47.0,M,0000,0000*52
   // Ensure the checksum is correct before doing this
@@ -206,7 +208,7 @@ void uBlox_NEO_M8N::messageGGA(char* msg)
 }
 
 
-void uBlox_NEO_M8N::messageRMC(char* msg) 
+void EverMoreSA320::messageRMC(char* msg) 
 {
   // $GPRMC,094728.000,A,5126.4900,N,00016.0200,E,0.01,259.87,310318,,,D*6B
   // Ensure the checksum is correct before doing this
@@ -276,8 +278,9 @@ void uBlox_NEO_M8N::messageRMC(char* msg)
   longitude = DegreeToDecimal(longitude, lonEW);
 }
 
+
 // Convert HEX to DEC
-int uBlox_NEO_M8N::Hex2Dec(char c) {
+int EverMoreSA320::Hex2Dec(char c) {
 
   if (c >= '0' && c <= '9') {
     return c - '0';
@@ -290,109 +293,12 @@ int uBlox_NEO_M8N::Hex2Dec(char c) {
   }
 }
 
+void EverMoreSA320::SelectSentences()
+{  
 
-void uBlox_NEO_M8N::AllSentences()
-{
-  // NMEA_GLL output interval - Geographic Position - Latitude longitude
-  // NMEA_RMC output interval - Recommended Minimum Specific GNSS Sentence
-  // NMEA_VTG output interval - Course Over Ground and Ground Speed
-  // NMEA_GGA output interval - GPS Fix Data
-  // NMEA_GSA output interval - GNSS DOPS and Active Satellites
-  // NMEA_GSV output interval - GNSS Satellites in View
-
-  // Enable $PUBX,40,GLL,0,1,0,0*5D
-  gpsSerial->println("$PUBX,40,GLL,0,1,0,0*5D");
-  delay(100);
-
-  // Enable $PUBX,40,RMC,0,1,0,0*46
-  gpsSerial->println("$PUBX,40,RMC,0,1,0,0*46");
-  delay(100);
-  
-  // Enable $PUBX,40,VTG,0,1,0,0*5F
-  gpsSerial->println("$PUBX,40,VTG,0,1,0,0*5F");
-  delay(100);
-
-  // Enable $PUBX,40,GGA,0,1,0,0*5B
-  gpsSerial->println("$PUBX,40,GGA,0,1,0,0*5B");
-  delay(100);
-  
-  // Enable $PUBX,40,GSA,0,1,0,0*4F
-  gpsSerial->println("$PUBX,40,GSA,0,1,0,0*4F");
-  delay(100);  
-
-  // Enable $PUBX,40,GSV,0,5,0,0*5C
-  gpsSerial->println("$PUBX,40,GSV,0,5,0,0*5C");
-  delay(100);
 }
 
+void EverMoreSA320::AllSentences()
+{  
 
-void uBlox_NEO_M8N::SelectSentences()
-{
-  // NMEA_GLL output interval - Geographic Position - Latitude longitude
-  // NMEA_RMC output interval - Recommended Minimum Specific GNSS Sentence
-  // NMEA_VTG output interval - Course Over Ground and Ground Speed
-  // NMEA_GGA output interval - GPS Fix Data
-  // NMEA_GSA output interval - GNSS DOPS and Active Satellites
-  // NMEA_GSV output interval - GNSS Satellites in View
-
-  // Enable $PUBX,40,RMC,0,1,0,0*46
-  gpsSerial->println("$PUBX,40,RMC,0,1,0,0*46");
-  delay(100);
-
-  // Enable $PUBX,40,GGA,0,1,0,0*5B
-  gpsSerial->println("$PUBX,40,GGA,0,1,0,0*5B");
-  delay(100);
-
-  // disable $PUBX,40,GLL,0,0,0,0*5C
-  gpsSerial->println("$PUBX,40,GLL,0,0,0,0*5C");
-  delay(100);
-  
-  // disable $PUBX,40,VTG,0,0,0,0*5E
-  gpsSerial->println("$PUBX,40,VTG,0,0,0,0*5E");
-  delay(100);
-  
-  // disable $PUBX,40,GSA,0,0,0,0*4E
-  gpsSerial->println("$PUBX,40,GSA,0,0,0,0*4E");
-  delay(100);  
-
-  // disable $PUBX,40,GSV,0,0,0,0*59
-  gpsSerial->println("$PUBX,40,GSV,0,0,0,0*59");
-  delay(100);
-  
-}
-
-
-void uBlox_NEO_M8N::SelectGGAonly()
-{
-  // NMEA_GLL output interval - Geographic Position - Latitude longitude
-  // NMEA_RMC output interval - Recommended Minimum Specific GNSS Sentence
-  // NMEA_VTG output interval - Course Over Ground and Ground Speed
-  // NMEA_GGA output interval - GPS Fix Data
-  // NMEA_GSA output interval - GNSS DOPS and Active Satellites
-  // NMEA_GSV output interval - GNSS Satellites in View
-
-  // Enable $PUBX,40,GGA,0,1,0,0*5B
-  gpsSerial->println("$PUBX,40,GGA,0,1,0,0*5B");
-  delay(100);
-
-  // disable $PUBX,40,RMC,0,0,0,0*47
-  gpsSerial->println("$PUBX,40,RMC,0,0,0,0*47");
-  delay(100);
-
-  // disable $PUBX,40,GLL,0,0,0,0*5C
-  gpsSerial->println("$PUBX,40,GLL,0,0,0,0*5C");
-  delay(100);
-
-  // disable $PUBX,40,VTG,0,0,0,0*5E
-  gpsSerial->println("$PUBX,40,VTG,0,0,0,0*5E");
-  delay(100);
-  
-  // disable $PUBX,40,GSA,0,0,0,0*4E
-  gpsSerial->println("$PUBX,40,GSA,0,0,0,0*4E");
-  delay(100);  
-
-  // disable $PUBX,40,GSV,0,0,0,0*59
-  gpsSerial->println("$PUBX,40,GSV,0,0,0,0*59");
-  delay(100);
-  
 }

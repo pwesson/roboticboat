@@ -7,11 +7,14 @@
 	public:
 		HardwareSerial *gpsSerial;
 		AdaUltimateGPS3(HardwareSerial *serialPort);
-		void read(char);
-                void checkGPGGA();
-		void checkGPRMC();
+		void listen();
+                void read(char);
+                void messageGGA(char*);
+		void messageRMC(char*);
                 bool CheckSum(char*);
+		void AllSentences();
 		void SelectSentences();
+		void SelectGGAonly();
 		int Hex2Dec(char);
                 void parseString(char*);
 		float DegreeToDecimal(float, byte);
@@ -34,7 +37,6 @@
 		volatile bool flag = true;
 		volatile char redbuffer[120];
 		volatile char blubuffer[120];
-		char gpsfields[25][20];
 };
 
 #endif

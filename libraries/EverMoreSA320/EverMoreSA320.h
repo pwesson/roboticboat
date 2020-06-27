@@ -1,12 +1,12 @@
-#ifndef ParallaxPMB688_h
-  #define ParallaxPMB688_h
+#ifndef EverMoreSA320_h
+  #define EverMoreSA320_h
 
   #include "Arduino.h"
 
-  class ParallaxPMB688{
+  class EverMoreSA320{
 	public:
 		HardwareSerial *gpsSerial;
-		ParallaxPMB688(HardwareSerial *serialPort);
+		EverMoreSA320(HardwareSerial *serialPort);
 		void listen();
                 void read(char);
                 void messageGGA(char*);
@@ -14,11 +14,8 @@
                 bool CheckSum(char*);
 		int Hex2Dec(char);
                 void parseString(char*);
-		void SetGPSWalkMode();
 		void SelectSentences();
 		void AllSentences();
-		void Binary2NMEA();
-		void NMEA2Binary();
 		float DegreeToDecimal(float, byte);
                
   		float gpstime;
@@ -40,6 +37,6 @@
 		volatile char redbuffer[120];
 		volatile char blubuffer[120];
 
-  };
+};
 
 #endif

@@ -7,14 +7,16 @@
 	public:
 		HardwareSerial *gpsSerial;
 		uBlox_NEO_M8N(HardwareSerial *serialPort);
-		void read(char);
-                void checkGPGGA();
-		void checkGPRMC();
+		void listen();
+                void read(char);
+                void messageGGA(char*);
+		void messageRMC(char*);
                 bool CheckSum(char*);
 		int Hex2Dec(char);
                 void parseString(char*);
 		void SelectSentences();
 		void AllSentences();
+		void SelectGGAonly();
 		float DegreeToDecimal(float, byte);
                
   		float gpstime;
@@ -35,7 +37,6 @@
 		volatile bool flag = true;
 		volatile char redbuffer[120];
 		volatile char blubuffer[120];
-		char gpsfields[25][20];
-  };
+};
 
 #endif

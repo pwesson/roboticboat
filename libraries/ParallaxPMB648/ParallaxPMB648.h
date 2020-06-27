@@ -1,12 +1,12 @@
-#ifndef ParallaxPMB688_h
-  #define ParallaxPMB688_h
+#ifndef ParallaxPMB648_h
+  #define ParallaxPMB648_h
 
   #include "Arduino.h"
 
-  class ParallaxPMB688{
+  class ParallaxPMB648{
 	public:
 		HardwareSerial *gpsSerial;
-		ParallaxPMB688(HardwareSerial *serialPort);
+		ParallaxPMB648(HardwareSerial *serialPort);
 		void listen();
                 void read(char);
                 void messageGGA(char*);
@@ -40,6 +40,6 @@
 		volatile char redbuffer[120];
 		volatile char blubuffer[120];
 
-  };
+};
 
 #endif

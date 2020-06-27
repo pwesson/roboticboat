@@ -16,14 +16,14 @@
 // England and Wales, without regard to its conflict of law provisions.
 
 
-#include "ParallaxPMB688.h"
+#include "ParallaxPMB648.h"
 
-ParallaxPMB688::ParallaxPMB688(HardwareSerial *serialPort){
+ParallaxPMB648::ParallaxPMB648(HardwareSerial *serialPort){
 
   gpsSerial = serialPort;
 }
 
-void ParallaxPMB688::listen(){
+void ParallaxPMB648::listen(){
 
   while (gpsSerial->available())
   {
@@ -31,7 +31,7 @@ void ParallaxPMB688::listen(){
   }
 }
 
-void ParallaxPMB688::read(char nextChar){
+void ParallaxPMB648::read(char nextChar){
 
   // Start of a GPS message
   if (nextChar == '$') {
@@ -77,7 +77,7 @@ void ParallaxPMB688::read(char nextChar){
 
 }
 
-bool ParallaxPMB688::CheckSum(char* msg) {
+bool ParallaxPMB648::CheckSum(char* msg) {
 
   // Check the checksum
   //$GPGGA,.........................0000*6A
@@ -105,7 +105,7 @@ bool ParallaxPMB688::CheckSum(char* msg) {
   return false;
 }
 
-float ParallaxPMB688::DegreeToDecimal(float num, byte sign)
+float ParallaxPMB648::DegreeToDecimal(float num, byte sign)
 {
    // Want to convert DDMM.MMMM to a decimal number DD.DDDDD
 
@@ -124,14 +124,14 @@ float ParallaxPMB688::DegreeToDecimal(float num, byte sign)
    return -(degree + (mins + decpart)/60);
 }
 
-void ParallaxPMB688::parseString(char* msg) {
+void ParallaxPMB648::parseString(char* msg) {
  
   messageGGA(msg);
   messageRMC(msg);
 }
 
 
-void ParallaxPMB688::messageGGA(char* msg) 
+void ParallaxPMB648::messageGGA(char* msg) 
 {
   // $GPGGA,094728.000,5126.4900,N,00016.0200,E,2,08,1.30,19.4,M,47.0,M,0000,0000*52
   // Ensure the checksum is correct before doing this
@@ -208,7 +208,7 @@ void ParallaxPMB688::messageGGA(char* msg)
 }
 
 
-void ParallaxPMB688::messageRMC(char* msg) 
+void ParallaxPMB648::messageRMC(char* msg) 
 {
   // $GPRMC,094728.000,A,5126.4900,N,00016.0200,E,0.01,259.87,310318,,,D*6B
   // Ensure the checksum is correct before doing this
@@ -280,7 +280,7 @@ void ParallaxPMB688::messageRMC(char* msg)
 
 
 // Convert HEX to DEC
-int ParallaxPMB688::Hex2Dec(char c) {
+int ParallaxPMB648::Hex2Dec(char c) {
 
   if (c >= '0' && c <= '9') {
     return c - '0';
@@ -293,7 +293,7 @@ int ParallaxPMB688::Hex2Dec(char c) {
   }
 }
 
-void ParallaxPMB688::NMEA2Binary()
+void ParallaxPMB648::NMEA2Binary()
 {
   // Switch to Binary communication mode with the GPS Module
   // Sets it to SiRF Binary Mode
@@ -303,7 +303,7 @@ void ParallaxPMB688::NMEA2Binary()
   delay(2000);  
 }
 
-void ParallaxPMB688::Binary2NMEA()
+void ParallaxPMB648::Binary2NMEA()
 {
   // Start Sequence
   gpsSerial->write(0xA0);       
@@ -323,7 +323,7 @@ void ParallaxPMB688::Binary2NMEA()
   gpsSerial->write(0xB3);
 }
 
-void ParallaxPMB688::SetGPSWalkMode()
+void ParallaxPMB648::SetGPSWalkMode()
 {
   //The GPS is by default set up as Static Navigation
   //which means the lat/lon will not change unless moving say 50 meters
@@ -364,7 +364,7 @@ void ParallaxPMB688::SetGPSWalkMode()
   Binary2NMEA();
 }
 
-void ParallaxPMB688::SelectSentences()
+void ParallaxPMB648::SelectSentences()
 {  
 
   NMEA2Binary();
@@ -415,7 +415,7 @@ void ParallaxPMB688::SelectSentences()
   //Returns in NMEA format, so no need to request Binary2NMEA
 }
 
-void ParallaxPMB688::AllSentences()
+void ParallaxPMB648::AllSentences()
 {  
 
   NMEA2Binary();

@@ -23,16 +23,21 @@ uBlox_PAM_7Q::uBlox_PAM_7Q(HardwareSerial *serialPort){
   gpsSerial = serialPort;
 }
 
+void uBlox_PAM_7Q::listen(){
+
+  while (gpsSerial->available())
+  {
+     read(gpsSerial->read());
+  }
+}
+
 void uBlox_PAM_7Q::read(char nextChar){
 
   // Start of a GPS message
   if (nextChar == '$') {
-    if (flag) {
-      redbuffer[ptr] = '\0';
-    }
-    else {
-      blubuffer[ptr] = '\0';
-    }
+    
+    flag ? redbuffer[ptr] = '\0' : blubuffer[ptr] = '\0';
+
     ptr = 0;
   }
 
@@ -41,38 +46,32 @@ void uBlox_PAM_7Q::read(char nextChar){
 
     if (flag) {
       flag = false;
+      
+      // Set termination character of the current buffer
       redbuffer[ptr] = '\0';
-      if (CheckSum((char*) redbuffer )) {
-        parseString((char*) redbuffer );
-        checkGPGGA();
-        checkGPRMC();
-      }
+
+      // Process the message if the checksum is correct
+      if (CheckSum((char*) redbuffer )) {parseString((char*) redbuffer );}
     }
     else
     {
       flag = true;
+      
+      // Set termination character of the current buffer
       blubuffer[ptr] = '\0';
-      if (CheckSum((char*) blubuffer )) {
-        parseString((char*) blubuffer );
-        checkGPGGA();
-        checkGPRMC();     
-      }
+
+      // Process the message if the checksum is correct
+      if (CheckSum((char*) blubuffer )) {parseString((char*) blubuffer );}
     }   
     ptr = 0; 
   }
 
   // Add a new character
-  if (flag) {
-    redbuffer[ptr] = nextChar;
-  }
-  else {
-    blubuffer[ptr] = nextChar;
-  }
+  flag ? redbuffer[ptr] = nextChar : blubuffer[ptr] = nextChar;
 
-  ptr++;
-  if (ptr >= 120) {
-    ptr = 120-1;
-  }
+  // Check we stay within allocated memory
+  if (ptr < 119) ptr++;
+
 }
 
 bool uBlox_PAM_7Q::CheckSum(char* msg) {
@@ -103,55 +102,6 @@ bool uBlox_PAM_7Q::CheckSum(char* msg) {
   return false;
 }
 
-
-void uBlox_PAM_7Q::checkGPGGA() {
-
-  // Do we have a GGA message?
-  if (strstr(gpsfields[0], "GGA")) {
-
-    gpstime = atof(gpsfields[1]);      // 130048.000
-    latitude = atof(gpsfields[2]);     // 0000.0000
-    latNS = gpsfields[3][0];           // N
-    longitude = atof(gpsfields[4]);    // 00000.0000
-    lonEW = gpsfields[5][0];           // E
-    fixquality = atof(gpsfields[6]);   // Fix quality (1=GPS)(2=DGPS)
-    numsatelites = atoi(gpsfields[7]); // Number of satellites being tracked
-                                       // Horizontal dilution of position
-    altitude = atof(gpsfields[9]);     // Altitude above mean sea level, Meters 
-                                       // Height of geoid (mean sea level)
-                                       // Time in seconds since last DGPS update
-                                       // DGPS station ID number
-                                       // the checksum data, always begins with *
-
-    latitude = DegreeToDecimal(latitude, latNS);
-    longitude = DegreeToDecimal(longitude, lonEW);
-  }
-}
-
-
-void uBlox_PAM_7Q::checkGPRMC() {
-
-  // Do we have a RMC message?
-  if (strstr(gpsfields[0], "RMC")) {
-
-    gpstime = atof(gpsfields[1]);   // 111837.000
-    gpsstatus = gpsfields[2][0];    // Status A=active or V=Void.
-    latitude = atof(gpsfields[3]);  // 0000.0000
-    latNS = gpsfields[4][0];        // N
-    longitude = atof(gpsfields[5]); // 00000.0000
-    lonEW = gpsfields[6][0];        // E
-                                    // Speed over the ground in knots
-                                    // Track angle in degrees True
-    gpsdate = atof(gpsfields[9]);   // Date - 11th of October 2015
-                                    // Magnetic Variation
-                                    // The checksum data, always begins with *
-
-    latitude = DegreeToDecimal(latitude, latNS);
-    longitude = DegreeToDecimal(longitude, lonEW);
-  }
-}
-
-
 float uBlox_PAM_7Q::DegreeToDecimal(float num, byte sign)
 {
    // Want to convert DDMM.MMMM to a decimal number DD.DDDDD
@@ -173,35 +123,156 @@ float uBlox_PAM_7Q::DegreeToDecimal(float num, byte sign)
 
 void uBlox_PAM_7Q::parseString(char* msg) {
 
-  // Length of the GPS message
-  int len = strlen(msg);
-  int n=0;
-  int j=0;
-
-  // Loop over the string
-  for (int i=0; i<len; i++) {
-
-    if(msg[i] == ',' || msg[i] == '*') {
-      if (j == 0) {
-        gpsfields[n][0] = '_';
-        gpsfields[n][1] = '\0';
-      }
-      n++;
-      j=0;
-      
-      if (n >= 25)
-      {
-      	n = 25-1;
-      }
-    }
-    else {
-      gpsfields[n][j] = msg[i];
-      j++;
-      gpsfields[n][j] = '\0';
-    }
-  }
+  messageGGA(msg);
+  messageRMC(msg);
 }
 
+void uBlox_PAM_7Q::messageGGA(char* msg) 
+{
+  // $GPGGA,094728.000,5126.4900,N,00016.0200,E,2,08,1.30,19.4,M,47.0,M,0000,0000*52
+  // Ensure the checksum is correct before doing this
+  // Replace all the commas by end-of-string character '\0'
+  // Read the first string
+  // Knowing the length of the first string, can jump over to the next string
+  // Repeat the process for all the known fields.
+  
+  // Do we have a GGA message?
+  if (!strstr(msg, "GGA")) return;
+
+  // Length of the GPS message
+  int len = strlen(msg);
+
+  // Replace all the commas with end character '\0'
+  for (int j=0; j<len; j++){
+    if (msg[j] == ',' || msg[j] == '*'){
+      msg[j] = '\0';
+    }
+  }
+
+  // Allocate working variables
+  int i = 0;
+
+  //$GPGGA
+
+  // GMT time  094728.000
+  i += strlen(&msg[i])+1;
+  gpstime = atof(&msg[i]);
+  
+  // Latitude 5126.4900
+  i += strlen(&msg[i])+1;
+  latitude = atof(&msg[i]);
+  
+  // North or South (single char)
+  i += strlen(&msg[i])+1;
+  latNS = msg[i];
+  
+  // Longitude 00016.0200
+  i += strlen(&msg[i])+1;
+  longitude = atof(&msg[i]);
+  
+  // East or West (single char)
+  i += strlen(&msg[i])+1;
+  lonEW = msg[i];
+  
+  // Fix quality (1=GPS)(2=DGPS)
+  i += strlen(&msg[i])+1;
+  fixquality = atof(&msg[i]);   
+      
+  // Number of satellites being tracked
+  i += strlen(&msg[i])+1;
+  numsatelites = atoi(&msg[i]); 
+  
+  // Horizontal dilution of position
+  i += strlen(&msg[i])+1;
+  
+  // Number of satellites being tracked
+  i += strlen(&msg[i])+1;
+  altitude = atof(&msg[i]);     
+  
+  // Height of geoid (mean sea level)
+  i += strlen(&msg[i])+1;
+  
+  // Time in seconds since last DGPS update
+  i += strlen(&msg[i])+1;
+  
+  // DGPS station ID number
+  i += strlen(&msg[i])+1;
+  
+  // Convert from degrees and minutes to degrees in decimals
+  latitude = DegreeToDecimal(latitude, latNS);
+  longitude = DegreeToDecimal(longitude, lonEW);   
+}
+
+
+void uBlox_PAM_7Q::messageRMC(char* msg) 
+{
+  // $GPRMC,094728.000,A,5126.4900,N,00016.0200,E,0.01,259.87,310318,,,D*6B
+  // Ensure the checksum is correct before doing this
+  // Replace all the commas by end-of-string character '\0'
+  // Read the first string
+  // Knowing the length of the first string, can jump over to the next string
+  // Repeat the process for all the known fields.
+  
+  // Do we have a RMC message?
+  if (!strstr(msg, "RMC")) return;
+
+  // Length of the GPS message
+  int len = strlen(msg);
+
+  // Replace all the commas with end character '\0'
+  for (int j=0; j<len; j++){
+    if (msg[j] == ',' || msg[j] == '*'){
+      msg[j] = '\0';
+    }
+  }
+
+  // Allocate working variables
+  int i = 0;
+
+  //$GPRMC
+
+  // GMT time  094728.000
+  i += strlen(&msg[i])+1;
+  gpstime = atof(&msg[i]);
+
+  // Status A=active or V=Void.
+  i += strlen(&msg[i])+1;
+  gpsstatus = msg[i];
+
+  // Latitude 5126.4900
+  i += strlen(&msg[i])+1;
+  latitude = atof(&msg[i]);
+
+  // North or South (single char)
+  i += strlen(&msg[i])+1;
+  latNS = msg[i];
+
+  // Longitude 00016.0200
+  i += strlen(&msg[i])+1;
+  longitude = atof(&msg[i]);
+
+  // East or West (single char)
+  i += strlen(&msg[i])+1;
+  lonEW = msg[i];             
+
+  // // Speed over the ground in knots
+  i += strlen(&msg[i])+1;
+  gpsknots = atof(&msg[i]);
+
+  // Track angle in degrees True North
+  i += strlen(&msg[i])+1;
+  gpstrack = atof(&msg[i]); 
+  
+  // Date - 31st of March 2018
+  i += strlen(&msg[i])+1;
+  gpsdate = atof(&msg[i]); 
+                     
+  // Magnetic Variation
+  
+  // Convert from degrees and minutes to degrees in decimals
+  latitude = DegreeToDecimal(latitude, latNS);
+  longitude = DegreeToDecimal(longitude, lonEW);
+}
 
 // Convert HEX to DEC
 int uBlox_PAM_7Q::Hex2Dec(char c) {
@@ -262,20 +333,55 @@ void uBlox_PAM_7Q::SelectSentences()
   // NMEA_GSA output interval - GNSS DOPS and Active Satellites
   // NMEA_GSV output interval - GNSS Satellites in View
 
-  // disable $PUBX,40,GLL,0,0,0,0*5C
-  gpsSerial->println("$PUBX,40,GLL,0,0,0,0*5C");
-  delay(100);
-
   // Enable $PUBX,40,RMC,0,1,0,0*46
   gpsSerial->println("$PUBX,40,RMC,0,1,0,0*46");
+  delay(100);
+
+  // Enable $PUBX,40,GGA,0,1,0,0*5B
+  gpsSerial->println("$PUBX,40,GGA,0,1,0,0*5B");
+  delay(100);
+
+  // disable $PUBX,40,GLL,0,0,0,0*5C
+  gpsSerial->println("$PUBX,40,GLL,0,0,0,0*5C");
   delay(100);
   
   // disable $PUBX,40,VTG,0,0,0,0*5E
   gpsSerial->println("$PUBX,40,VTG,0,0,0,0*5E");
   delay(100);
+  
+  // disable $PUBX,40,GSA,0,0,0,0*4E
+  gpsSerial->println("$PUBX,40,GSA,0,0,0,0*4E");
+  delay(100);  
+
+  // disable $PUBX,40,GSV,0,0,0,0*59
+  gpsSerial->println("$PUBX,40,GSV,0,0,0,0*59");
+  delay(100);
+  
+}
+
+void uBlox_PAM_7Q::SelectGGAonly()
+{
+  // NMEA_GLL output interval - Geographic Position - Latitude longitude
+  // NMEA_RMC output interval - Recommended Minimum Specific GNSS Sentence
+  // NMEA_VTG output interval - Course Over Ground and Ground Speed
+  // NMEA_GGA output interval - GPS Fix Data
+  // NMEA_GSA output interval - GNSS DOPS and Active Satellites
+  // NMEA_GSV output interval - GNSS Satellites in View
 
   // Enable $PUBX,40,GGA,0,1,0,0*5B
   gpsSerial->println("$PUBX,40,GGA,0,1,0,0*5B");
+  delay(100);
+
+  // disable $PUBX,40,RMC,0,0,0,0*47
+  gpsSerial->println("$PUBX,40,RMC,0,0,0,0*47");
+  delay(100);
+
+  // disable $PUBX,40,GLL,0,0,0,0*5C
+  gpsSerial->println("$PUBX,40,GLL,0,0,0,0*5C");
+  delay(100);
+
+  // disable $PUBX,40,VTG,0,0,0,0*5E
+  gpsSerial->println("$PUBX,40,VTG,0,0,0,0*5E");
   delay(100);
   
   // disable $PUBX,40,GSA,0,0,0,0*4E
