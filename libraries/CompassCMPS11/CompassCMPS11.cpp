@@ -155,7 +155,7 @@ byte CompassCMPS11::getRoll()
   // Read the values
   roll = Wire.read();
 
-  return roll ;
+  return roll;
 }
 
 int16_t CompassCMPS11::getGyroX()
