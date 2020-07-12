@@ -15,6 +15,7 @@
 		void AllSentences();
 		void SelectSentences();
  		void SelectGGAonly();
+		void SelectMode(int);
 		int Hex2Dec(char);
                 void parseString(char*);
 		float DegreeToDecimal(float, byte);

@@ -22,6 +22,9 @@ ParallaxSIM33EAU::ParallaxSIM33EAU(HardwareSerial *serialPort){
 
   gpsSerial = serialPort;
 
+  // Set to pedestrian mode as default
+  SelectMode(1);
+
 }
 
 void ParallaxSIM33EAU::listen(){
@@ -363,5 +366,37 @@ void ParallaxSIM33EAU::SelectGGAonly()
 
   // Receive GGA messages only
   gpsSerial->println("$PMTK314,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*35");
+  delay(100); 
+}
+
+void ParallaxSIM33EAU::SelectMode(int mode)
+{
+  // Set the sensitivity of the GPS module
+  // Mode can be 0,1,2 or 3
+
+  switch (mode)
+  {
+    case 0:
+      // Vehicle mode (max altitude 10km)
+      gpsSerial->println("$PMTK886,0*28");
+      break;
+    case 1:
+      // Pedestrian mode (max altitude 10km)
+      gpsSerial->println("$PMTK886,1*29");
+      break;
+    case 2:
+      // Avionic mode (max altitude 10km)
+      gpsSerial->println("$PMTK886,2*2A");
+      break;
+    case 3:
+      // Balloon mode (max altitude 80km, speed<515m/s)
+      gpsSerial->println("$PMTK886,3*2B");
+      break;
+    default:
+      // Do nothing 
+      break; 
+  }
+
+  // Give GPS module some time
   delay(100);
 }
