@@ -42,6 +42,7 @@
 	  void ReadCompass();
 	  void ReadAccelerator();
 	  void ReadGyro();
+	  void ReadMagnet();
 	  void changeAddress(byte, byte);
 
 	  int16_t getBearing();
@@ -69,6 +70,7 @@
 	  float magnetX = 0;
 	  float magnetY = 0;
 	  float magnetZ = 0;
+	  float magnetScale = 2.0f/32768.0f; // 2 Gauss
 
   	  float accelX = 0;
   	  float accelY = 0;

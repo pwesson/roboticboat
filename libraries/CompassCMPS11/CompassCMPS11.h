@@ -41,6 +41,7 @@
 	  void ReadCompass();
 	  void ReadAccelerator();
 	  void ReadGyro();
+	  void ReadMagnet();
 	  void changeAddress(byte, byte);
 
 	  int16_t getBearing();
@@ -68,16 +69,17 @@
 	  float magnetX = 0;
   	  float magnetY = 0;
   	  float magnetZ = 0;
+	  float magnetScale = 2.0f/32768.0f; // 2 Gauss
 
 	  float accelX = 0;
   	  float accelY = 0;
   	  float accelZ = 0;
-  	  float accelScale = 9.80592991914f * 2.0f/32767.5f; // the accel scale is 2G
+  	  float accelScale = 9.80592991914f * 2.0f/32768.0f; // the accel scale is 2G
   
   	  float gyroX = 0;
   	  float gyroY = 0;
   	  float gyroZ = 0;
-  	  float gyroScale = 245.0f/32767.5f; // LSM9DS0 documentation
+  	  float gyroScale = 245.0f/32768.0f; // LSM9DS0 documentation
 	
 	private:
   	  byte _byteHigh;

@@ -629,6 +629,48 @@ void CompassCMPS12::ReadGyro()
 
 }
 
+void CompassCMPS12::ReadMagnet()
+{
+  // Setup timeout parameter
+  int timeout = COMMUNICATION_TIMEOUT;
+
+  // Begin communication with CMPS11
+  Wire.beginTransmission(_i2cAddress);
+
+  // Tell register you want some data
+  Wire.write(MAGNETX_Register);
+
+  // End the transmission
+  int nackCatcher = Wire.endTransmission();
+
+  // Return if we have a connection problem 
+  if(nackCatcher != 0){magnetX = 0; magnetY = 0; magnetZ = 0; return;}
+  
+  // Request 6 bytes from CMPS11
+  Wire.requestFrom(_i2cAddress , SIX_BYTES);
+
+  // Wait for the bytes to arrive.
+  // Don't wait forever as this will hang the whole program
+  while((Wire.available() < SIX_BYTES) && (timeout-- >0))
+    delay(1);
+
+  // Timed out so return
+  if (timeout <= 0) {magnetX = 0; magnetY = 0; magnetZ = 0; return;}
+  
+  // Read the values
+  _byteHigh = Wire.read(); _byteLow = Wire.read();
+  magnetX = (int16_t)(((int16_t)_byteHigh <<8) + (int16_t)_byteLow) * magnetScale;
+
+    // Read the values
+  _byteHigh = Wire.read(); _byteLow = Wire.read();
+  magnetY = (int16_t)(((int16_t)_byteHigh <<8) + (int16_t)_byteLow) * magnetScale;
+
+  // Read the values
+  _byteHigh = Wire.read(); _byteLow = Wire.read();
+  magnetZ = (int16_t)(((int16_t)_byteHigh <<8) + (int16_t)_byteLow) * magnetScale;
+
+}
+
 void CompassCMPS12::changeAddress(byte i2cAddress, byte newi2cAddress)
 {
   // Reset the address on the i2c network
