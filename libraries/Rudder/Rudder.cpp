@@ -1,3 +1,24 @@
+// Teensy 4.0 with Kyosho Seawind
+// Copyright (C) 2020 https://www.roboticboat.uk
+// 5925b03d-41c7-4051-b890-02b7775383dd
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// These Terms shall be governed and construed in accordance with the laws of 
+// England and Wales, without regard to its conflict of law provisions.
+
+
+
 #include "Rudder.h"
 #include <math.h>
 #include <stdlib.h>
@@ -183,6 +204,59 @@ int Rudder::Update(double latitude, double longitude, float bearing)
    // Negative sign as gyro has positive change as bearing reduce
    return (int)gyro.PredictXlimit(-requiredBearingChange/sensitivity, minposition , maxposition);
 
+}
+
+float Rudder::ChooseTarget(float windDirection, float bearing)
+{
+   // Want to find the tack bearing to be on
+   // windDirection +/- 60 degrees say
+  
+   float windPort = windDirection + 60;
+   if (windPort > 360) {windPort -= 360;}
+
+   float windStar = windDirection - 60;
+   if (windStar < 0) {windStar += 360;}
+
+   // The difference between the boat heading and the targetbearing
+   portBearingChange  = windPort - bearing;
+   starBearingChange  = windStar - bearing;
+
+   // Ensure the change in bearing is between -180 and 180 degrees
+   if (portBearingChange > 180) portBearingChange -= 360;
+   if (portBearingChange < -180) portBearingChange += 360;
+
+   // Ensure the change in bearing is between -180 and 180 degrees
+   if (starBearingChange > 180) starBearingChange -= 360;
+   if (starBearingChange < -180) starBearingChange += 360;
+
+   // Choose the bearing that is closest
+   if (abs(portBearingChange) < abs(starBearingChange))
+   {
+      // Have chosen the Port tack
+      return windPort;
+   }
+
+  // Have chosen the Starboard tack
+  return windStar;
+}
+
+int Rudder::UpdateTarget(float target, float bearing)
+{
+   // The difference between the boat heading and the targetbearing
+   requiredBearingChange = target - bearing;
+
+   // Ensure the change in bearing is between -180 and 180 degrees
+   if (requiredBearingChange > 180) requiredBearingChange -= 360;
+   if (requiredBearingChange < -180) requiredBearingChange += 360;
+
+   // Restrict the maximum change in the bearing, so rudder can keep up
+   targetbearing = nav.clean(bearing + requiredBearingChange);
+
+   //Restrict the rudder position (within to be between min and max position of servo)
+   //Halve the degree error by 2, so hopefully get on target in 2 seconds.
+   
+   // Negative sign as gyro has positive change as bearing reduce
+   return (int)gyro.PredictXlimit(-requiredBearingChange/sensitivity, minposition , maxposition);
 }
 
 int Rudder::Update(float degreechange)

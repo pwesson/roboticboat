@@ -1,3 +1,5 @@
+// Licensed under the GNU General Public License v3.0
+
 #include <Navigation.h>
 #include <WeightedLeastSquares.h>
 
@@ -19,6 +21,8 @@
 		
 		int Update(double, double, float);
                 int Update(float);
+		int UpdateTarget(float, float);
+		float ChooseTarget(float, float);
 		
 		Navigation nav;
 		WeightedLeastSquares wls;
@@ -45,13 +49,15 @@
 		float bearingchanged = 0;
 		float requiredBearingChange = 0;
 		float targetbearing = 0;
+		float portBearingChange = 0;
+		float starBearingChange = 0;
 
 		float rudderma = 0;
 		float lambda = 0.1;
 		float sensitivity = 2;
 		
                 int gyroNbearing = 0;
-		float gyrolambda = 0.1;
+		float gyrolambda = 0.01;
 		float gyrooldbearing = 0;
 		float gyrozmean = 0;
 

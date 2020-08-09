@@ -188,7 +188,7 @@ void AdaUltimateGPS3::messageGGA(char* msg)
   // Horizontal dilution of position
   i += strlen(&msg[i])+1;
   
-  // Number of satellites being tracked
+  // Altitude
   i += strlen(&msg[i])+1;
   altitude = atof(&msg[i]);     
   
