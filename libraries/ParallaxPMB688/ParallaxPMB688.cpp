@@ -21,6 +21,11 @@
 ParallaxPMB688::ParallaxPMB688(HardwareSerial *serialPort){
 
   gpsSerial = serialPort;
+
+  // Initialise bytes
+  latNS = '.';
+  lonEW = '.';
+  gpsstatus = 'v';
 }
 
 void ParallaxPMB688::listen(){
@@ -169,6 +174,7 @@ void ParallaxPMB688::messageGGA(char* msg)
   // North or South (single char)
   i += strlen(&msg[i])+1;
   latNS = msg[i];
+  if (latNS == '\0') latNS = '.';
   
   // Longitude 00016.0200
   i += strlen(&msg[i])+1;
@@ -177,6 +183,7 @@ void ParallaxPMB688::messageGGA(char* msg)
   // East or West (single char)
   i += strlen(&msg[i])+1;
   lonEW = msg[i];
+  if (lonEW == '\0') lonEW = '.';
   
   // Fix quality (1=GPS)(2=DGPS)
   i += strlen(&msg[i])+1;
@@ -250,6 +257,7 @@ void ParallaxPMB688::messageRMC(char* msg)
   // North or South (single char)
   i += strlen(&msg[i])+1;
   latNS = msg[i];
+  if (latNS == '\0') latNS = '.';
 
   // Longitude 00016.0200
   i += strlen(&msg[i])+1;
@@ -258,6 +266,7 @@ void ParallaxPMB688::messageRMC(char* msg)
   // East or West (single char)
   i += strlen(&msg[i])+1;
   lonEW = msg[i];             
+  if (lonEW == '\0') lonEW = '.';
 
   // // Speed over the ground in knots
   i += strlen(&msg[i])+1;

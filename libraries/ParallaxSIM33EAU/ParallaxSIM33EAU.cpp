@@ -25,6 +25,10 @@ ParallaxSIM33EAU::ParallaxSIM33EAU(HardwareSerial *serialPort){
   // Set to pedestrian mode as default
   SelectMode(1);
 
+  // Initialise bytes
+  latNS = '.';
+  lonEW = '.';
+  gpsstatus = 'v';
 }
 
 void ParallaxSIM33EAU::listen(){
@@ -171,6 +175,7 @@ void ParallaxSIM33EAU::messageGGA(char* msg)
   // North or South (single char)
   i += strlen(&msg[i])+1;
   latNS = msg[i];
+  if (latNS == '\0') latNS = '.';
   
   // Longitude 00016.0200
   i += strlen(&msg[i])+1;
@@ -179,6 +184,7 @@ void ParallaxSIM33EAU::messageGGA(char* msg)
   // East or West (single char)
   i += strlen(&msg[i])+1;
   lonEW = msg[i];
+  if (lonEW == '\0') lonEW = '.';
   
   // Fix quality (1=GPS)(2=DGPS)
   i += strlen(&msg[i])+1;
@@ -252,6 +258,7 @@ void ParallaxSIM33EAU::messageRMC(char* msg)
   // North or South (single char)
   i += strlen(&msg[i])+1;
   latNS = msg[i];
+  if (latNS == '\0') latNS = '.';
 
   // Longitude 00016.0200
   i += strlen(&msg[i])+1;
@@ -259,7 +266,8 @@ void ParallaxSIM33EAU::messageRMC(char* msg)
 
   // East or West (single char)
   i += strlen(&msg[i])+1;
-  lonEW = msg[i];             
+  lonEW = msg[i];     
+  if (lonEW == '\0') lonEW = '.';        
 
   // // Speed over the ground in knots
   i += strlen(&msg[i])+1;

@@ -21,6 +21,11 @@
 uBlox_PAM_7Q::uBlox_PAM_7Q(HardwareSerial *serialPort){
 
   gpsSerial = serialPort;
+
+  // Initialise bytes
+  latNS = '.';
+  lonEW = '.';
+  gpsstatus = 'v';
 }
 
 void uBlox_PAM_7Q::listen(){
@@ -165,6 +170,7 @@ void uBlox_PAM_7Q::messageGGA(char* msg)
   // North or South (single char)
   i += strlen(&msg[i])+1;
   latNS = msg[i];
+  if (latNS == '\0') latNS = '.';
   
   // Longitude 00016.0200
   i += strlen(&msg[i])+1;
@@ -173,6 +179,7 @@ void uBlox_PAM_7Q::messageGGA(char* msg)
   // East or West (single char)
   i += strlen(&msg[i])+1;
   lonEW = msg[i];
+  if (lonEW == '\0') lonEW = '.';     
   
   // Fix quality (1=GPS)(2=DGPS)
   i += strlen(&msg[i])+1;
@@ -246,6 +253,7 @@ void uBlox_PAM_7Q::messageRMC(char* msg)
   // North or South (single char)
   i += strlen(&msg[i])+1;
   latNS = msg[i];
+  if (latNS == '\0') latNS = '.';
 
   // Longitude 00016.0200
   i += strlen(&msg[i])+1;
@@ -253,7 +261,8 @@ void uBlox_PAM_7Q::messageRMC(char* msg)
 
   // East or West (single char)
   i += strlen(&msg[i])+1;
-  lonEW = msg[i];             
+  lonEW = msg[i];
+  if (lonEW == '\0') lonEW = '.';                  
 
   // // Speed over the ground in knots
   i += strlen(&msg[i])+1;
