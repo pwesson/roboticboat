@@ -1,6 +1,6 @@
 // Navigation functions
 // Copyright (C) 2020 https://www.roboticboat.uk
-// fae5cec2-a0c3-4edf-8008-d6b261ea9cc5
+// 509cf479-8624-4acf-a5cd-b223e6e76094
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -147,7 +147,7 @@ double Navigation::crosstrack(coordinate placeA, coordinate placeB, coordinate p
 
    double theta2 = atan2(sin(dlambda2)*cos(phi2), cos(phi0)*sin(phi2)-sin(phi0)*cos(phi2)*cos(dlambda2));
    
-   double crosstrackdelta = sin(delta2) * sin(theta2 - theta1);
+   double crosstrackdelta = asin(sin(delta2) * sin(theta2 - theta1));
 
    // Return cross track distance in meters
    return _earthRadius * crosstrackdelta;
@@ -189,7 +189,7 @@ double Navigation::alongtrack(coordinate placeA, coordinate placeB, coordinate p
 
    double theta2 = atan2(sin(dlambda2)*cos(phi2), cos(phi0)*sin(phi2)-sin(phi0)*cos(phi2)*cos(dlambda2));
    
-   double crosstrackdelta = sin(delta2) * sin(theta2 - theta1);	
+   double crosstrackdelta = asin(sin(delta2) * sin(theta2 - theta1));	
 
    double alongtrackdelta = acos(cos(delta2) / cos(crosstrackdelta));
 
