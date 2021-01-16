@@ -16,7 +16,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // These Terms shall be governed and construed in accordance with the laws of 
 // England and Wales, without regard to its conflict of law provisions.
-// Test new token
 
 
 #include "Wind.h"
