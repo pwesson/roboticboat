@@ -1,5 +1,6 @@
 // Digital Compass CMPS14
 // Copyright (C) 2020 https://www.roboticboat.uk
+// ba4046d4-8d3a-4393-99a8-65c76a4d1488
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
