@@ -6,11 +6,11 @@
   //Address of the CMPS11 compass on i2C
   #define _i2cAddress 0x60
 
-  #define CONTROL_Register 0
+  #define CONTROL_Register  0
 
-  #define BEARING_Register 2 
-  #define PITCH_Register 4 
-  #define ROLL_Register 5
+  #define BEARING_Register  2 
+  #define PITCH_Register    4 
+  #define ROLL_Register     5
 
   #define MAGNETX_Register  6
   #define MAGNETY_Register  8
@@ -26,11 +26,8 @@
 
   #define TEMP_Register 24
 
-  #define COMMUNICATION_TIMEOUT 1000
-  #define TIMEOUT_MICROSECONDS 1000
-
-  #define ONE_BYTE 1
-  #define TWO_BYTES 2
+  #define ONE_BYTE   1
+  #define TWO_BYTES  2
   #define FOUR_BYTES 4
   #define SIX_BYTES  6
 
@@ -45,6 +42,7 @@
 	  void changeAddress(byte, byte);
 
 	  int16_t getBearing();
+          int16_t nReceived;
 	  byte getPitch();
 	  byte getRoll();
 		

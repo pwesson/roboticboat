@@ -12,9 +12,6 @@
 #define _REGISTER_DATA     0x03
 #define _REGISTER_STATUS   0x09
 
-#define COMMUNICATION_TIMEOUT 1000
-#define TIMEOUT_MICROSECONDS 1000
-
 #define _GN_088_Gauss 0x00 << 5
 #define _GN_130_Gauss 0x01 << 5
 #define _GN_190_Gauss 0x02 << 5
