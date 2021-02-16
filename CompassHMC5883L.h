@@ -33,7 +33,7 @@
 #define _GN_560_Resolution 3.03
 #define _GN_810_Resolution 4.35
 
-#define _SIX_BYTES 6
+#define SIX_BYTES 6
 
 class CompassHMC5883L
 {
@@ -41,7 +41,8 @@ class CompassHMC5883L
 	  CompassHMC5883L();
 	  void Setup();
 	  float getBearing();
-
+          int nReceived;
+	  
 	private:         
 	  int16_t _x;
 	  int16_t _y;

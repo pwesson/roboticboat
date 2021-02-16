@@ -17,13 +17,10 @@
 
   #define CONTROL_Register 22
 
-  #define COMMUNICATION_TIMEOUT 1000
-  #define TIMEOUT_MICROSECONDS 1000
-
-  #define ONE_BYTE 1
-  #define TWO_BYTES 2
+  #define ONE_BYTE   1
+  #define TWO_BYTES  2
   #define FOUR_BYTES 4
-  #define SIX_BYTES 6
+  #define SIX_BYTES  6
 
   class CompassCMPS10{
 	public:

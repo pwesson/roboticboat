@@ -25,14 +25,14 @@
 //
 //	00	Configuration Register A	R/W
 //	01	Configuration Register B	R/W
-//	02	Mode Register			    R/W
+//	02	Mode Register			R/W
 //	03	Data Output X MSB Register	Read
 //	04	Data Output X LSB Register	Read
 //	05	Data Output Z MSB Register	Read (notice Z before Y)
 //	06	Data Output Z LSB Register	Read
 //	07	Data Output Y MSB Register	Read
 //	08	Data Output Y LSB Register 	Read
-//	09	Status Register			    Read
+//	09	Status Register			Read
 //	10	Identification Register A	Read
 //	11	Identification Register B	Read
 //	12	Identification Register C	Read
@@ -84,9 +84,6 @@ void CompassHMC5883L::Setup()
 
 float CompassHMC5883L::getBearing()
 {
-  // Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-  
   //Begin communication with HMC5883L
   Wire.beginTransmission(_i2cAddress);
 
@@ -100,14 +97,10 @@ float CompassHMC5883L::getBearing()
   if(nackCatcher != 0){return 0;}
 
   // Request 6 bytes from HMC5883L
-  Wire.requestFrom(_i2cAddress, _SIX_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress, SIX_BYTES);
   
-  // Wait for the 6 bytes to arrive
-  while((Wire.available() < _SIX_BYTES) && (timeout-- >0))
-    delay(1);
-
-// Timed out so return
-  if (timeout <= 0) return -1;
+  // Timed out so return
+  if (nReceived != SIX_BYTES) return 0;
   
   // Set space to read in six bytes
   uint8_t buffer[_SIX_BYTES];
