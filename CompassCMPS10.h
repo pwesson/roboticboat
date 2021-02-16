@@ -42,6 +42,7 @@
 	  int16_t getAcceleroZ();
 
 	  int bearing;
+          int nReceived;
 	  signed char pitch;
 	  signed char roll;
 
