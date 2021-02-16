@@ -99,11 +99,11 @@ float CompassHMC5883L::getBearing()
   // Request 6 bytes from HMC5883L
   nReceived = Wire.requestFrom(_i2cAddress, SIX_BYTES);
   
-  // Timed out so return
+  // Something went wrong
   if (nReceived != SIX_BYTES) return 0;
   
   // Set space to read in six bytes
-  uint8_t buffer[_SIX_BYTES];
+  uint8_t buffer[SIX_BYTES];
 
   // Read the values into an array
   buffer[0] = Wire.read();
