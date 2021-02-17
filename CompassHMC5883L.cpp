@@ -1,6 +1,6 @@
 // Digital Compass HMC5883L
 // Copyright (C) 2021 https://www.roboticboat.uk
-// a9cd6479-e046-449b-8e49-3ee84eb83270
+// 35c90777-1887-4bcc-bb50-dbcaa2cf45c6
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

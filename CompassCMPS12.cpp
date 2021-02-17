@@ -1,6 +1,6 @@
 // Digital Compass CMPS12
-// Copyright (C) 2020 https://www.roboticboat.uk
-// 3a23ce05-8329-4379-a9a6-fce4d368b69b
+// Copyright (C) 2021 https://www.roboticboat.uk
+// 34060d00-1ab6-4283-93e0-0cafaf184a46
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -53,10 +53,7 @@ void CompassCMPS12::begin(){
 
 int16_t CompassCMPS12::getBearing()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -69,14 +66,10 @@ int16_t CompassCMPS12::getBearing()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return -1;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -85,18 +78,12 @@ int16_t CompassCMPS12::getBearing()
   // Calculate full bearing
   bearing = ((_byteHigh<<8) + _byteLow) / 10;
   
-  // Calculate bearing decimal
-  //_fine = ((_byteHigh<<8) + _byteLow) % 10; 
-
   return bearing;
 }
 
 byte CompassCMPS12::getPitch()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -109,14 +96,10 @@ byte CompassCMPS12::getPitch()
   if(nackCatcher != 0){return 0;}
 
   // Request 1 byte from CMPS12
-  Wire.requestFrom(_i2cAddress , ONE_BYTE);
+  nReceived = Wire.requestFrom(_i2cAddress , ONE_BYTE);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < ONE_BYTE) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != ONE_BYTE) return 0;
 
   // Read the values
   pitch = Wire.read();
@@ -126,10 +109,7 @@ byte CompassCMPS12::getPitch()
 
 byte CompassCMPS12::getRoll()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -142,14 +122,10 @@ byte CompassCMPS12::getRoll()
   if(nackCatcher != 0){return 0;}
 	
   // Request 1 byte from CMPS12
-  Wire.requestFrom(_i2cAddress , ONE_BYTE);
+  nReceived = Wire.requestFrom(_i2cAddress , ONE_BYTE);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < ONE_BYTE) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != ONE_BYTE) return 0;
 
   // Read the values
   roll = Wire.read();
@@ -159,10 +135,7 @@ byte CompassCMPS12::getRoll()
 
 int16_t CompassCMPS12::getGyroX()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -175,14 +148,10 @@ int16_t CompassCMPS12::getGyroX()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
-  
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -194,10 +163,7 @@ int16_t CompassCMPS12::getGyroX()
 
 int16_t CompassCMPS12::getGyroY()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -210,14 +176,10 @@ int16_t CompassCMPS12::getGyroY()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -229,10 +191,7 @@ int16_t CompassCMPS12::getGyroY()
 
 int16_t CompassCMPS12::getGyroZ()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -245,14 +204,10 @@ int16_t CompassCMPS12::getGyroZ()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -264,10 +219,7 @@ int16_t CompassCMPS12::getGyroZ()
 
 int16_t CompassCMPS12::getAcceleroX()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -280,14 +232,10 @@ int16_t CompassCMPS12::getAcceleroX()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -299,10 +247,7 @@ int16_t CompassCMPS12::getAcceleroX()
 
 int16_t CompassCMPS12::getAcceleroY()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -315,14 +260,10 @@ int16_t CompassCMPS12::getAcceleroY()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -334,10 +275,7 @@ int16_t CompassCMPS12::getAcceleroY()
 
 int16_t CompassCMPS12::getAcceleroZ()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -350,14 +288,10 @@ int16_t CompassCMPS12::getAcceleroZ()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
-  
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -370,10 +304,7 @@ int16_t CompassCMPS12::getAcceleroZ()
 
 int16_t CompassCMPS12::getMagnetX()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -386,14 +317,10 @@ int16_t CompassCMPS12::getMagnetX()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -405,10 +332,7 @@ int16_t CompassCMPS12::getMagnetX()
 
 int16_t CompassCMPS12::getMagnetY()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -421,14 +345,10 @@ int16_t CompassCMPS12::getMagnetY()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -440,10 +360,7 @@ int16_t CompassCMPS12::getMagnetY()
 
 int16_t CompassCMPS12::getMagnetZ()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -456,14 +373,10 @@ int16_t CompassCMPS12::getMagnetZ()
   if(nackCatcher != 0){return 0;}
 	
   // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , TWO_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , TWO_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < TWO_BYTES) && (timeout-- >0))
-	delay(1);
-
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != TWO_BYTES) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -475,10 +388,7 @@ int16_t CompassCMPS12::getMagnetZ()
 
 float CompassCMPS12::getTemperature()
 {
-  //Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
-  // begin communication with CMPS12
+  // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
   // Tell register you want some data
@@ -490,14 +400,11 @@ float CompassCMPS12::getTemperature()
   // Return if we have a connection problem	
   if(nackCatcher != 0){return 0;}
 	
-  // Request 2 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , ONE_BYTE);
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < ONE_BYTE) && (timeout-- >0))
-	delay(1);
+  // Request 1 byte from CMPS12
+  nReceived = Wire.requestFrom(_i2cAddress , ONE_BYTE);
 
-  if (timeout <= 0) return 0;
+  // Something has gone wrong
+  if (nReceived != ONE_BYTE) return 0;
 
   // Read the values
   _byteHigh = Wire.read(); 
@@ -508,9 +415,6 @@ float CompassCMPS12::getTemperature()
 
 void CompassCMPS12::ReadCompass()
 {
-  // Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
   // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
@@ -524,15 +428,10 @@ void CompassCMPS12::ReadCompass()
   if(nackCatcher != 0){bearing = 0; pitch = 0;  roll = 0; return;}
   
   // Request 4 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , FOUR_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , FOUR_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < FOUR_BYTES) && (timeout-- >0))
-    delay(1);
-
-  // Timed out so return
-  if (timeout <= 0) {bearing = 0; pitch = 0;  roll = 0; return;}
+  // Something went wrong
+  if (nReceived != FOUR_BYTES) {bearing = 0; pitch = 0;  roll = 0; return;}
   
   // Read the values
   _byteHigh = Wire.read(); _byteLow = Wire.read();
@@ -564,15 +463,10 @@ void CompassCMPS12::ReadAccelerator()
   if(nackCatcher != 0){accelX = 0; accelY = 0; accelZ = 0; return;}
   
   // Request 6 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , SIX_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , SIX_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < SIX_BYTES) && (timeout-- >0))
-    delay(1);
-
-  // Timed out so return
-  if (timeout <= 0) {accelX = 0; accelY = 0; accelZ = 0; return;}
+  // Something went wrong
+  if (nReceived != SIX_BYTES) {accelX = 0; accelY = 0; accelZ = 0; return;}
   
   // Read the values
   _byteHigh = Wire.read(); _byteLow = Wire.read();
@@ -590,9 +484,6 @@ void CompassCMPS12::ReadAccelerator()
 
 void CompassCMPS12::ReadGyro()
 {
-  // Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
   // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
@@ -606,15 +497,10 @@ void CompassCMPS12::ReadGyro()
   if(nackCatcher != 0){gyroX = 0; gyroY = 0; gyroZ = 0; return;}
   
   // Request 6 bytes from CMPS12
-  Wire.requestFrom(_i2cAddress , SIX_BYTES);
+  nReceived = Wire.requestFrom(_i2cAddress , SIX_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < SIX_BYTES) && (timeout-- >0))
-    delay(1);
-
-  // Timed out so return
-  if (timeout <= 0) {accelX = 0; accelY = 0; accelZ = 0; return;}
+  // Sometime went wrong
+  if (nReceived != SIX_BYTES) {accelX = 0; accelY = 0; accelZ = 0; return;}
   
   // Read the values
   _byteHigh = Wire.read(); _byteLow = Wire.read();
@@ -632,9 +518,6 @@ void CompassCMPS12::ReadGyro()
 
 void CompassCMPS12::ReadMagnet()
 {
-  // Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
   // Begin communication with CMPS11
   Wire.beginTransmission(_i2cAddress);
 
@@ -650,13 +533,8 @@ void CompassCMPS12::ReadMagnet()
   // Request 6 bytes from CMPS11
   Wire.requestFrom(_i2cAddress , SIX_BYTES);
 
-  // Wait for the bytes to arrive.
-  // Don't wait forever as this will hang the whole program
-  while((Wire.available() < SIX_BYTES) && (timeout-- >0))
-    delay(1);
-
-  // Timed out so return
-  if (timeout <= 0) {magnetX = 0; magnetY = 0; magnetZ = 0; return;}
+  // Something went wrong
+  if (nReceived != SIX_BYTES) {magnetX = 0; magnetY = 0; magnetZ = 0; return;}
   
   // Read the values
   _byteHigh = Wire.read(); _byteLow = Wire.read();

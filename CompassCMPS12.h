@@ -27,9 +27,6 @@
 
   #define TEMP_Register 24
 
-  #define COMMUNICATION_TIMEOUT 1000
-  #define TIMEOUT_MICROSECONDS 1000
-
   #define ONE_BYTE   1
   #define TWO_BYTES  2
   #define FOUR_BYTES 4
@@ -64,6 +61,7 @@
 	  float getTemperature();
 
 	  int bearing;
+	  int nReceived;
 	  signed char pitch;
 	  signed char roll;
 
@@ -80,7 +78,7 @@
 	  float gyroX = 0;
 	  float gyroY = 0;
 	  float gyroZ = 0;
-	  float gyroScale = 1.f/16.f;  // 1 Dps = 16 LSB
+	  float gyroScale = 1.0f/16.0f;  // 1 Dps = 16 LSB
 
 	private:
 		byte _byteHigh;

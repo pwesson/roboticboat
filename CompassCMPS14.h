@@ -24,9 +24,6 @@
   #define GYROY_Register 20
   #define GYROZ_Register 22
 
-  #define COMMUNICATION_TIMEOUT 1000
-  #define TIMEOUT_MICROSECONDS 1000
-
   #define ONE_BYTE   1
   #define TWO_BYTES  2
   #define FOUR_BYTES 4
@@ -59,6 +56,7 @@
 	int16_t getMagnetZ();
 		
 	int bearing;
+        int nReceived;
 	signed char pitch;
 	signed char roll;
 
@@ -72,14 +70,14 @@
   	float accelZ = 0;
   	// The acceleration along the X-axis, presented in mg 
   	// See BNO080_Datasheet_v1.3 page 21
-  	float accelScale = 9.80592991914f/1000.f; // 1 m/s^2
+  	float accelScale = 9.80592991914f/1000.0f; // 1 m/s^2
   
   	float gyroX = 0;
   	float gyroY = 0;
   	float gyroZ = 0;
   	// 16bit signed integer 32,768
   	// Max 2000 degrees per second - page 6
-  	float gyroScale = 1.0f/16.f; // 1 Dps
+  	float gyroScale = 1.0f/16.0f; // 1 Dps
   		
   private:
 	byte _byteHigh;

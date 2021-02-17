@@ -46,7 +46,7 @@
 	  float accelX = 0;
 	  float accelY = 0;
 	  float accelZ = 0;
-	  float accelScale = 9.80592991914f * 2.0f/32767.5f; // setting the accel scale to 2G
+	  float accelScale = 9.80592991914f * 2.0f/32768.0f; // setting the accel scale to 2G
 
 	private:
 	  byte _byteHigh;
