@@ -447,9 +447,6 @@ void CompassCMPS12::ReadCompass()
 
 void CompassCMPS12::ReadAccelerator()
 {
-  // Setup timeout parameter
-  int timeout = COMMUNICATION_TIMEOUT;
-
   // Begin communication with CMPS12
   Wire.beginTransmission(_i2cAddress);
 
