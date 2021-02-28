@@ -22,9 +22,6 @@ ParallaxSIM33EAU::ParallaxSIM33EAU(HardwareSerial *serialPort){
 
   gpsSerial = serialPort;
 
-  // Set to pedestrian mode as default
-  SelectMode(1);
-
   // Initialise bytes
   latNS = '.';
   lonEW = '.';
