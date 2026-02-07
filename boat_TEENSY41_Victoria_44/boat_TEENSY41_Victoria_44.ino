@@ -433,6 +433,9 @@ void setup() {
     // Teensy 4.1 onboard LED light - feedback to user
     pinMode(LED_PIN, OUTPUT);
 
+    // Hall sensor
+    pinMode(A0, INPUT);
+
     // RC receiver channels
     pinMode(RC_RUDDER_PIN, INPUT);
     pinMode(RC_SAIL_PIN, INPUT);
