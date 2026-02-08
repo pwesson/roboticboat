@@ -1,6 +1,7 @@
 // Least Square functions
-// Copyright (C) 2020 https://www.roboticboat.uk
-// 4d69f25f-7e80-4e75-8618-fb8a7095fca1
+// Copyright (C) 2026
+// 9e13f12b-f5e2-46a5-b0f6-5d28f8ba977b
+// Refined in collaboration with Microsoft Copilot
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,38 +19,74 @@
 // England and Wales, without regard to its conflict of law provisions.
 
 
-#ifndef WeightedLeastSquares_h
-  #define WeightedLeastSquares_h
+#ifndef WEIGHTED_LEAST_SQUARES_H
+#define WEIGHTED_LEAST_SQUARES_H
 
-  class WeightedLeastSquares{
-	public:
-		WeightedLeastSquares();
+//--------------------------------------------------------------
+// WeightedLeastSquares
+//
+// Performs an exponentially-discounted weighted linear regression.
+// Useful for:
+//   - real‑time calibration
+//   - smoothing noisy sensor relationships
+//   - modelling linear behaviour that slowly drifts over time
+//
+// Supports:
+//   - dynamic regression (default)
+//   - fixed/static regression (SetRegression)
+//   - predicting Y from X
+//   - predicting X from Y (with optional clamping)
+//--------------------------------------------------------------
 
-                void Reset();
-		void SetDiscount(float);
-		void SetRegression(float, float);
-		void AddReading(float, float);
+class WeightedLeastSquares {
 
-		float PredictY(float);
-		float PredictX(float);
-                float PredictXlimit(float, float, float);
+public:
+    WeightedLeastSquares();
 
-		bool staticRegression;
-		float w;
-		float x;
-		float y;
-		float discount;
-                float slope;
-		float intercept;
-	                
-	private:
-  		float determinate;
-		float sum_w;
-		float sum_wx;
-		float sum_wy;
-                float sum_wxx;
-                float sum_wxy;
+    // Reset all internal accumulators and parameters
+    void Reset();
 
-  };
+    // Fix the regression to a static slope/intercept (disables learning)
+    void SetRegression(float setslope, float setintercept);
+
+    // Set exponential discount factor for old samples
+    void SetDiscount(float d);
+
+    // Predict Y from X using current regression
+    float PredictY(float x);
+
+    // Predict X from Y using current regression
+    float PredictX(float y);
+
+    // Predict X from Y, clamped to [miny, maxy]
+    float PredictXlimit(float y, float miny, float maxy);
+
+    // Add a new (x,y) sample to the regression
+    void AddReading(float x, float y);
+
+private:
+    // Regression parameters
+    float slope = 0;
+    float intercept = 0;
+
+    // Exponential discount factor (0–1)
+    float discount = 0.98;
+
+    // Weight of each new sample (constant)
+    float w = 1;
+
+    // Whether regression is fixed/static
+    bool staticRegression = false;
+
+    // Accumulators for discounted weighted regression
+    float sum_w = 0;
+    float sum_wx = 0;
+    float sum_wy = 0;
+    float sum_wxx = 0;
+    float sum_wxy = 0;
+
+    // Temporary determinant
+    float determinate = 0;
+};
 
 #endif

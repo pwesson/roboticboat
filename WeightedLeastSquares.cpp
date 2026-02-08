@@ -1,6 +1,7 @@
 // Least Square functions
-// Copyright (C) 2020 https://www.roboticboat.uk
-// b06279e0-e969-4f5a-b198-7bb059eda801
+// Copyright (C) 2026
+// 875ffe6a-c0ad-4a07-a75f-01783882d9b8
+// Refined in collaboration with Microsoft Copilot
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,102 +21,118 @@
 
 #include "WeightedLeastSquares.h"
 
-WeightedLeastSquares::WeightedLeastSquares(){
-
-   // Initialise
-   Reset();
-
+//--------------------------------------------------------------
+// Constructor
+//--------------------------------------------------------------
+WeightedLeastSquares::WeightedLeastSquares() {
+    Reset();
 }
 
-void WeightedLeastSquares::Reset(){
+//--------------------------------------------------------------
+// Reset()
+// Clears all regression accumulators and resets parameters.
+//--------------------------------------------------------------
+void WeightedLeastSquares::Reset() {
+    discount = 0.98;
+    staticRegression = false;
 
-   discount= 0.98;
+    w = 1;
+    slope = 0;
+    intercept = 0;
 
-   staticRegression = false;
-   w = 1;
-   slope = 0;
-   intercept = 0;
-   sum_w = 0;
-   sum_wx = 0;
-   sum_wy = 0;
-   sum_wxx = 0;
-   sum_wxy = 0;
+    sum_w = 0;
+    sum_wx = 0;
+    sum_wy = 0;
+    sum_wxx = 0;
+    sum_wxy = 0;
 }
 
-void WeightedLeastSquares::SetRegression(float setslope, float setintercept)
-{
-   // Set the regression coefficient
-   slope = setslope;
-   intercept = setintercept;
-   staticRegression = true;
+//--------------------------------------------------------------
+// SetRegression()
+// Locks the regression to a fixed slope/intercept.
+// No further learning occurs until Reset() is called.
+//--------------------------------------------------------------
+void WeightedLeastSquares::SetRegression(float setslope, float setintercept) {
+    slope = setslope;
+    intercept = setintercept;
+    staticRegression = true;
 }
 
-void WeightedLeastSquares::SetDiscount(float d){
-
-   // The discount rate of old observations
-   discount = d;
+//--------------------------------------------------------------
+// SetDiscount()
+// Controls how quickly old samples fade.
+//   1.0 = no fading
+//   0.0 = forget everything immediately
+//--------------------------------------------------------------
+void WeightedLeastSquares::SetDiscount(float d) {
+    discount = d;
 }
 
-float WeightedLeastSquares::PredictY(float x){
-
-   // Predict using the regression line
-   return slope * x + intercept;
+//--------------------------------------------------------------
+// PredictY()
+// Returns Y = mX + c
+//--------------------------------------------------------------
+float WeightedLeastSquares::PredictY(float x) {
+    return slope * x + intercept;
 }
 
-float WeightedLeastSquares::PredictX(float y){
-
-   // Predict using the regression line
-   if (slope == 0) return 0;
-
-   return (y - intercept) / slope;
+//--------------------------------------------------------------
+// PredictX()
+// Returns X = (Y - c) / m
+//--------------------------------------------------------------
+float WeightedLeastSquares::PredictX(float y) {
+    if (slope == 0) return 0;   // Avoid divide-by-zero
+    return (y - intercept) / slope;
 }
 
-float WeightedLeastSquares::PredictXlimit(float y, float miny, float maxy){
+//--------------------------------------------------------------
+// PredictXlimit()
+// Same as PredictX(), but clamps output to [miny, maxy].
+// Useful for servo limits, etc.
+//--------------------------------------------------------------
+float WeightedLeastSquares::PredictXlimit(float y, float miny, float maxy) {
+    if (slope == 0) return 0;
 
-   // Predict using the regression line
-   if (slope == 0) return 0;
+    float pred = (y - intercept) / slope;
 
-   double predicty = (y - intercept) / slope;
+    if (pred > maxy) return maxy;
+    if (pred < miny) return miny;
 
-   if (predicty > maxy) return maxy;
-   if (predicty < miny) return miny;
-
-   return (y - intercept) / slope;
+    return pred;
 }
 
+//--------------------------------------------------------------
+// AddReading()
+// Adds a new (x,y) sample to the regression, applying
+// exponential discounting to older samples.
+//--------------------------------------------------------------
 void WeightedLeastSquares::AddReading(float x, float y)
 {
-   //Is the regression static. We want it fixed
+    // If regression is static, ignore new data
+    if (staticRegression) return;
 
-   if (staticRegression) return;
+    // Discount all previous accumulated values
+    sum_w   *= discount;
+    sum_wx  *= discount;
+    sum_wy  *= discount;
+    sum_wxx *= discount;
+    sum_wxy *= discount;
 
-   //First discount all the old observations
+    // Add new weighted sample
+    sum_w   += w;
+    sum_wx  += w * x;
+    sum_wy  += w * y;
+    sum_wxx += w * x * x;
+    sum_wxy += w * x * y;
 
-   sum_w =   discount * sum_w;
-   sum_wx =  discount * sum_wx;
-   sum_wy =  discount * sum_wy;
-   sum_wxx = discount * sum_wxx;
-   sum_wxy = discount * sum_wxy;
+    // Compute determinant of normal equation matrix
+    determinate = (sum_w * sum_wxx) - (sum_wx * sum_wx);
 
-   //Now add in the new observation
+    if (determinate != 0) {
+        // Update intercept
+        intercept = (sum_wy * sum_wxx - sum_wx * sum_wxy) / determinate;
 
-   sum_w =   sum_w + w;
-   sum_wx =  sum_wx + w * x;
-   sum_wy =  sum_wy + w * y;
-   sum_wxx = sum_wxx + w * x * x;
-   sum_wxy = sum_wxy + w * x * y;
-
-   //Determinate of the matrix
-
-   determinate = (sum_w * sum_wxx) - (sum_wx * sum_wx);
-
-   if (determinate != 0)
-   {
-      //Update the regression intercept
-      intercept = (sum_wy * sum_wxx - sum_wx * sum_wxy) / determinate;
-   
-      //Update the regression slope
-      slope = (sum_w * sum_wxy - sum_wx * sum_wy) / determinate;
-   }
-
+        // Update slope
+        slope = (sum_w * sum_wxy - sum_wx * sum_wy) / determinate;
+    }
 }
